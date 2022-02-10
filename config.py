@@ -54,7 +54,7 @@ def parse_configuration(data:dict, *, verify: bool = True):
     set_default("main page options", "description", "You are on the main page. Please provide your preferences on the user page, or/and consult the results page")
 
     # assign uids to choices and users, if necessary
-    gen_uid = itertools.count(1)
+    gen_uid = map(str, itertools.count(1))
     if data["users options"]["type"] == 'restricted':
         if isinstance(data["users options"]["allowed"], str):
             data["users options"]["allowed"] = data["users options"]["allowed"].split(' ')
