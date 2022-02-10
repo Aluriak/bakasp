@@ -1,7 +1,7 @@
 
 
-import clyngor
 import random
+import clyngor
 from flask import Flask, request, redirect, url_for, render_template, Markup
 
 
