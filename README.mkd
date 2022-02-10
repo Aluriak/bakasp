@@ -1,8 +1,8 @@
-# ASPerge
+# Bakasp
 
 Web service generator for ASP-based constraint solving.
 
-workflow:
+usage:
 - write the ASP backend
 - get your users to provide their preferences
 - watch the valid models.
