@@ -117,6 +117,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         username = get_username_of(userid) or "Unknown"
         if request.method == 'POST':
             user_choices[userid] = user_choice_repr_from_request_form(request.form)
+            nonlocal a_user_changed_its_choices
             a_user_changed_its_choices = True
             return redirect(url_for('thank_you_page'))
         return render_template('user-choice.html', username=username, userid=userid, preference_choice_text='Please select your preference(s)', choicetype=cfg['choices options']['type'], choices=cfg['choices options']['choices'])
