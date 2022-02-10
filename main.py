@@ -1,5 +1,4 @@
 
-import sys
 import glob
 from poc import create_app
 from utils import create_sorry_app
