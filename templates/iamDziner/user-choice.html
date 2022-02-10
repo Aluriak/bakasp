@@ -1,20 +1,30 @@
 
 {% extends 'base.html' %}
 
-{% block title %}{{preference_choice_text}}{% endblock %}
-
 {% block content %}
+{{preference_choice_text}}
+<br/>
+<br/>
+
 <form name='choiceform' id='choiceform' method=POST>
 
     {% if choicetype == 'multiple' %}
+            <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+            <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
             {% for choice, choiceid in choices.items() %}
-                <input type="checkbox" name="choice" value="{{choiceid}}" /> {{choice}} <br/>
+                <li><input type="checkbox" name="choice" value="{{choiceid}}" /> {{choice}} </li>
             {% endfor %}
+            </ul>
+            </div>
 
     {% elif choicetype == 'single' %}
+            <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+            <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
             {% for choice, choiceid in choices %}
                 <input type="radio" name="choice" value="{{choiceid}}" /> {{choice}} <br/>
             {% endfor %}
+            </ul>
+            </div>
     {% else %}
         Unsupported feature asked. Sorry. Ask the admin. That shouldn't happen.
     {% endif %}
