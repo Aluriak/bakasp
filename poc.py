@@ -28,14 +28,14 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def get_username_of(targetid: str) -> str or None:
         users = cfg["users options"]["allowed"]
         for username, userid in users.items() if isinstance(users, dict) else zip(users, users):
-            if userid == targetid:
+            if str(userid) == str(targetid):
                 return username
         return None
 
     @lru_cache(maxsize=len(cfg["choices options"]["choices"]))
     def get_choicename_of(targetid: str) -> str or None:
         for name, uid in cfg["choices options"]["choices"].items():
-            if uid == targetid:
+            if str(uid) == str(targetid):
                 return name
         return None
 
@@ -134,7 +134,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     if 'overview' in cfg["global options"]["public pages"]:
         @app.route('/overview')
         def overview_page():
-            return repr(user_choices)
+            return repr(user_choices) + '<br/>' + repr(cfg["users options"]["allowed"]) + '<br/>' + repr(cfg["choices options"]["choices"])
 
     if 'results' in cfg["global options"]["public pages"]:
         @app.route('/results')

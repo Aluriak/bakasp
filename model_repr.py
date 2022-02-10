@@ -18,10 +18,11 @@ def as_raw(idx: int, model: frozenset, userid_to_label: callable, choiceid_to_la
         by_pred.setdefault(atom, []).append(args)
     html = []
     for atom, argss in by_pred.items():
-        html.append(f'{len(argss)} <code>{atom}</code> atoms found: <code>' + ' '.join(f'{atom}({",".join(args)}).' for args in argss) + '</code>')
+        html.append(f'{len(argss)} <code>{atom}</code> atoms found: <code>' + ' '.join(f'{atom}({",".join(map(str, args))}).' for args in argss) + '</code>')
     # if only one atom of arity 2, then show it as a table
     if len(by_pred) == 1 and all(len(args) == 2 for args in next(iter(by_pred.values()))):
-        html.append(repr_model_as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True))
+        html.append('')
+        html.append(as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True))
     return f'<h2>Solution {idx}</h2><br/>' + '<br/>'.join(html) + '<br/>'
 
 
