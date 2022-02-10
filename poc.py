@@ -38,7 +38,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
 
     def render_template(template_file, **kwargs):
         "wrapper around flask.render_template, so that template file is the one indicated in configuration"
-        path = os.path.join(templates, cfg['global options']['template'], template_file)
+        path = os.path.join('templates/', cfg['global options']['template'], template_file)
         return flask_render_template(path, **kwargs)
 
 
