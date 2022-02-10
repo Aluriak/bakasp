@@ -9,9 +9,9 @@ import itertools
 def parse_configuration_file(json_file:str):
     with open(json_file) as fd:
         data = json.load(fd)
-    return parse_configuration(data)
+    return parse_configuration(data, filesource=json_file)
 
-def parse_configuration(data:dict, *, verify: bool = True):
+def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     raw_data = copy.deepcopy(data)
     if not verify:
         return data, raw_data  # hope it's valid
@@ -54,6 +54,8 @@ def parse_configuration(data:dict, *, verify: bool = True):
     set_default("overview options", "type", ["raw", "table"])
     set_default("main page options", "title", "")
     set_default("main page options", "description", "You are on the main page. Please provide your preferences on the user page, or/and consult the results page")
+    set_default("meta", "filesource", filesource)
+    set_default("meta", "save state", True)
 
     # assign uids to choices and users, if necessary
     gen_uid = map(str, itertools.count(1))
@@ -69,7 +71,7 @@ def parse_configuration(data:dict, *, verify: bool = True):
 
     # propagate values
     if data["global options"]["generated pages"] == 'all':
-        data["global options"]["generated pages"] = ["user", "results", "overview", "compilation", "configuration"]
+        data["global options"]["generated pages"] = ["user", "results", "overview", "compilation", "configuration", 'reset']
     if data["global options"]["public pages"] is None:
         data["global options"]["public pages"] = data["global options"]["generated pages"]
     if data["choices options"]["default"] == 'all':
@@ -116,6 +118,7 @@ def errors_in_configuration(cfg: dict):
 
     ensure_in("choices options", "type", {'single', 'multiple'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
+    ensure_in("meta", "save state", {True, False})
 
     # verify existence of the template and its content
     full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)

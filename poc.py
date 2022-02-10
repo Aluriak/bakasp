@@ -2,6 +2,7 @@
 """
 import os
 import sys
+import json
 import time
 from functools import lru_cache
 from flask import Flask, request, redirect, url_for, render_template, Markup
@@ -16,12 +17,32 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     app = Flask(__name__, template_folder=os.path.join('templates/', cfg['global options']['template']))
     a_user_changed_its_choices = True
     models = []
+    user_choices = {}  # userid -> choices
 
-    if cfg['users options']['type'] == 'restricted':
-        users = cfg["users options"]["allowed"]
-        user_choices = {u: cfg["choices options"]["default"] for u in users.values()}
-    else:
-        user_choices = {}  # userid -> choices
+    def init_user_choices():
+        nonlocal user_choices
+        if cfg['users options']['type'] == 'restricted':
+            users = cfg["users options"]["allowed"]
+            user_choices = {u: cfg["choices options"]["default"] for u in users.values()}
+        else:
+            user_choices = {}
+
+    def save_state():
+        if cfg['meta']['save state']:
+            with open(filestate, 'w') as fd:
+                json.dump(user_choices, fd)
+
+    def load_state():
+        if cfg['meta']['save state']:
+            nonlocal user_choices
+            with open(filestate) as fd:
+                user_choices = json.load(fd)
+        a_user_changed_its_choices = True
+
+    init_user_choices()
+    filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
+    if os.path.exists(filestate):
+        load_state()
 
 
     @lru_cache(maxsize=len(cfg["users options"]["allowed"]) if cfg["users options"]["type"] == 'restricted' else 1024)
@@ -116,9 +137,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def choice_page(userid):
         username = get_username_of(userid) or "Unknown"
         if request.method == 'POST':
-            user_choices[userid] = user_choice_repr_from_request_form(request.form)
-            nonlocal a_user_changed_its_choices
-            a_user_changed_its_choices = True
+            user_choices[userid] = list(user_choice_repr_from_request_form(request.form))  # keep list, because we need json serializable data
             return redirect(url_for('thank_you_page'))
         return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=cfg['choices options']['type'], choices=cfg['choices options']['choices'])
 
@@ -149,8 +168,20 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             return render_template('results.html', models=models,
                                    message=cfg["output options"]["insatisfiability message"] if not models else "")
 
+    if 'reset' in cfg["global options"]["public pages"] and cfg['meta']['save state']:
+        @app.route('/reset')
+        def reset_page():
+            init_user_choices()
+            save_state()
+            load_state()
+            return 'done.'
+
+
     @app.route('/thanks')
     def thank_you_page():
+        nonlocal a_user_changed_its_choices
+        a_user_changed_its_choices = True
+        save_state()
         return render_template('thanks.html', username='dear user')
 
     return app
