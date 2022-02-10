@@ -42,7 +42,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         return flask_render_template(path, **kwargs)
 
 
-    @lru_cache(size=len(cfg["users options"]["allowed"]) if cfg["users options"]["restricted"] else 1024)
+    @lru_cache(maxsize=len(cfg["users options"]["allowed"]) if cfg["users options"]["type"] == 'restricted' else 1024)
     def get_username_of(targetid: str) -> str or None:
         users = cfg["users options"]["allowed"]
         for username, userid in users.items() if isinstance(users, dict) else zip(users, users):
@@ -50,7 +50,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                 return username
         return None
 
-    @lru_cache(size=len(cfg["choices options"]["choices"]))
+    @lru_cache(maxsize=len(cfg["choices options"]["choices"]))
     def get_choicename_of(targetid: str) -> str or None:
         for name, uid in cfg["choices options"]["choices"].items():
             if uid == targetid:
