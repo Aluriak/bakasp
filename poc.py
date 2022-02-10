@@ -55,9 +55,9 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def atoms_from_data() -> [str]:
         atoms_templates = cfg["choices options"]["data atoms"]
         for template in atoms_templates:
-            for user in user_choices:
+            for userid in user_choices:
                 for choiceid in cfg["choices options"]["choices"].values():
-                    yield template.rstrip(".").format(user=user, choice=choiceid)+ '.'
+                    yield template.rstrip(".").format(user=userid, choice=choiceid)+ '.'
 
     def atoms_from_shows() -> [str]:
         shows = cfg["global options"]["shows"]
@@ -74,10 +74,10 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         if not a_user_changed_its_choices:
             return
         a_user_changed_its_choices = False
-        encoding = compute_encoding()
         nonlocal models
-        model_repr_func = model_repr.from_name(cfg["output options"]["model repr"])
         models = []
+        encoding = compute_encoding()
+        model_repr_func = model_repr.from_name(cfg["output options"]["model repr"])
         found_models = call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling')
         for idx, model in enumerate(found_models, start=1):
             html_repr = model_repr_func(idx, model, get_username_of, get_choicename_of)
