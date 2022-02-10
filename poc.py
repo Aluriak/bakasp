@@ -3,24 +3,12 @@
 import os
 import sys
 import time
-import clyngor
 from functools import lru_cache
 from flask import Flask, request, redirect, url_for, render_template, Markup
 
 import model_repr
 from config import parse_configuration_file
-
-
-def call_ASP_solver(encoding: str, n: int, sampling: bool) -> [frozenset]:
-    "Call to the ASP solver with given encoding and n/sampling config values"
-    if sampling:
-        models = list(clyngor.solve(inline=encoding))
-        if len(models) > n:
-            models = random.sample(models, n)
-        yield from models
-    else:
-        models = clyngor.solve(inline=encoding, nb_model=int(n))
-        yield from models
+from utils import call_ASP_solver
 
 
 def create_website(cfg: dict, raw_cfg: dict) -> Flask:
@@ -163,12 +151,14 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     return app
 
 
+def create_app(jsonfile: str) -> Flask or None:
+    cfg, raw_cfg = parse_configuration_file(sys.argv[1])
+    if cfg:
+        return create_website(cfg, raw_cfg)
+    else:
+        print("Abort because of malformed configuration")
 
 
 if __name__ == "__main__":
-    cfg, raw_cfg = parse_configuration_file(sys.argv[1])
-    if cfg:
-        ws = create_website(cfg, raw_cfg)
-        ws.run(port=8080, debug=True)
-    else:
-        print("Abort because of malformed configuration")
+    if app := create_app(sys.argv[1]):
+        app.run(port=8080, debug=True)
