@@ -66,13 +66,16 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         for show in shows:
             yield f'#show {show.rstrip(".")}.'
 
+    def compute_encoding() -> str:
+        return cfg["global options"]["base encoding"] + ''.join(atoms_from_choices()) + ''.join(atoms_from_shows()) + ''.join(set(atoms_from_data()))
+
     def compile_models():
         nonlocal a_user_changed_its_choices
         if not a_user_changed_its_choices:
             return
         a_user_changed_its_choices = False
+        encoding = compute_encoding()
         nonlocal models
-        encoding = cfg["global options"]["base encoding"] + ''.join(atoms_from_choices()) + ''.join(atoms_from_shows()) + ''.join(set(atoms_from_data()))
         model_repr_func = model_repr.from_name(cfg["output options"]["model repr"])
         models = []
         found_models = call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling')
@@ -134,7 +137,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     if 'overview' in cfg["global options"]["public pages"]:
         @app.route('/overview')
         def overview_page():
-            return repr(user_choices) + '<br/>' + repr(cfg["users options"]["allowed"]) + '<br/>' + repr(cfg["choices options"]["choices"])
+            return repr(user_choices) + '<br/>' + repr(cfg["users options"]["allowed"]) + '<br/>' + repr(cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding() + '</code>'
 
     if 'results' in cfg["global options"]["public pages"]:
         @app.route('/results')
