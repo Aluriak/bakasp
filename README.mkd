@@ -251,3 +251,8 @@ String going just under the title, and before all technical links.
 
 - [ ] allow a model to be debuggable (automatically) with SPOCK method
     - [ ] when unsatisfiable, propose *degraded* models where one (randomly chosen) constraint is ignored.
+
+- [ ] plugin system for `asp models -> html repr`  (and other parts ? forms maybe ?)
+
+- [ ] doc for newcomers
+- [ ] doc for non technical users
