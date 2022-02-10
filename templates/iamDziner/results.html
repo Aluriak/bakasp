@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Results{% endblock %}
+
+{% block content %}
+    {% for model in models %}
+        {{model}} <br/>
+    {% endfor %}
+    {% if not models %}
+        <center>no model to show</center>
+    {% endif %}
+{% endblock %}

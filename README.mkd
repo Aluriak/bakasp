@@ -1,0 +1,253 @@
+# ASPerge
+
+Web service generator for ASP-based management.
+
+
+## Pages
+
+### /
+The index contains a description, and link to other pages.
+
+### /user
+Allow for user to select its name.
+
+### /user/<userid>
+Allow for user to indicate its choice(s).
+
+### /compilation
+If configuration said so, it's the access to that page that provoke the compilation of models.
+
+### /results
+The representation of given models.
+
+### /overview
+The current choices of all users.
+
+### /configuration
+Access to the full json configuration, if allowed by the said configuration.
+
+### /configuration/raw
+Access to the input json configuration, if allowed by the said configuration.
+
+
+
+
+## Example
+
+A web service to assign a character to each player.
+
+Input base encoding:
+
+    1{ play(H, P): charc(P), ok(H,P) } 1 :- human(H).
+    1{ play(H, P): human(H), ok(H,P) } 1 :- charc(P).
+
+Note that ok/2 atoms are expected for the program to behave normally, as well as `charc/1` and `human/1`. They will all be derived from the configuration.
+
+Now, define in configuration what are the choices:
+
+
+    "base encoding": ...,        # see above
+    "shows": "play/2",
+    "engine": "ASP/clingo",
+
+    "users options": {
+        "user type": "restricted",
+        "allowed users": {
+            "Pierre": "p",
+            "David": "d",
+            "Noémie": "n",
+            "Noa": "v"
+        }
+    },
+    "choices options": {
+        "default": "all",
+        "type": "multiple choice",
+        "choices": {
+            "Méléas": "m",
+            "Éléa": "e",
+            "Haringer": "h",
+            "Ina": "i"
+        },
+        "data atoms": [
+            "human({user}",
+            "charc({choice}"
+        ],
+        "produced atoms": "ok({user},{choice})"
+    },
+    "output options": {
+        "max models": 10,
+        "sampling": false,
+    },
+    "overview options": {
+    },
+
+
+# Options
+
+## Global options
+
+#### location
+The base URL path to add before all system paths.
+
+By default, at root, i.e. `"/"`.
+
+#### base encoding
+The base ASP encoding that will be augmented with other atoms and shows described by the other options.
+
+#### shows
+List of atoms (or a string containing one atom and its arity) to `#show`, meaning those that will be shown in the output page.
+
+#### engine
+Future option that will allow to use other flavors of ASP, or other languages.
+Currently, the only valid value is not set, or `ASP/clingo`.
+
+#### compilation
+
+Must be one of `direct access`, `specific access`.
+
+With `direct access`, the compilation of the models is performed each time the `/results` page is loaded, before the loading.
+
+With `specific access`, the compilation of the models is performed each time the `/compilation` page is loaded.
+
+#### generated pages
+A list of string being the pages to be generated.
+Defaults to all pages, meaning: `["user", "overview", "compilation", "configuration"]`.
+
+#### public pages
+A list of string being the pages to be shown in the main page. If a page is shown but not generated, an error should be raised at website compilation.
+
+Defaults to None, meaning equivalence with `generated page` option.
+
+#### raise warnings
+Defaults to *true*. If *false*, doesn't indicate possible discrepancies in the configuration file at website-compilation time.
+
+#### raise errors
+Defaults to *true*. If *false*, doesn't fail on malformed configuration file at website-compilation time.
+
+#### template
+The template name to use. Must be a directory in `templates/` dir, containing the template html files.
+
+
+## Users options
+
+#### type
+Must be one of `restricted`, `valid-id` or `convertible`.
+
+With restricted, `allowed users` field is expected to be a dict or list.
+
+With `valid-id`, `allowed users` field is expected to be none or empty.
+
+With `convertible`, `allowed users` field is expected to be a pure python function taking the user string as input, and returning its uid.
+
+
+#### allowed
+Must be a dict, linking human representation of user uid to its (unique) ASP representation,
+or a list, when human and ASP representations are equivalent for all choices.
+
+If the user type is not restricted, that option is to be left blank or non-provided.
+
+
+
+## Choices options
+
+#### default
+By default, the user is generated with these combinations.
+
+May be "all", none, empty list, or a list of choices (if choice type allows for many choices to be made).
+
+If the given default choice is not compatible with the choice type (e.g. a list for a single choice), errors will be raised.
+
+#### type
+
+May be one of `single`, `multiple`, `1 or more`, `<N> or more` (with N an integer > 0), `at most <K>` (with `K` an integer > 1), or `<N> to <K>`.
+
+Note that `1 to 1` is equivalent to `single`, but `up to 1` is not.
+
+
+#### choices
+Must be a dict, linking human representation of choice to its (unique) ASP representation,
+or a list, when human and ASP representations are equivalent for all choices.
+
+
+#### produced atoms
+These atoms are produced for each user, depending of made choices.
+
+#### data atoms
+Data atoms are other atoms produced from the input and choices, but, in opposition to produced atoms, they are all produced, at website compilation time, from all possible `{user}` and `{choice}` values.
+
+They are useful to specify the user and choices entities only once, in the configuration, without having to write them explicitely in the base encoding.
+
+
+## Output options
+
+#### max models
+Integer, zero or more, describing the maximal number of models the output page will show.
+If set to zero, there is no limit to the number of models shown on output page.
+
+See `model selection` option for controlling which models are shown.
+
+#### model selection
+This options only takes effect when the total number of models exceed the max limit set by `max models` option.
+
+if this option is set to `first`, #`max models` models output by the solver are taken (with clingo, it's implemented by sending the `-n N` option).
+
+if this option is set to `sampling`, #`max models` models are randomly drafted from the set of all models.
+
+#### model repr
+This option allows to control how each model is rendered on the output page.
+
+Legal values and their meaning:
+
+- `"raw"`: models will be shown as ASP atoms.
+- `"table/2"`: atoms are expected to be of arity 2, and showing a relation between two sets. A table will be shown.
+
+#### insatisfiability message
+Defaults to "*that program is unsatisfiable*".
+
+
+## Overview options
+The overview page indicates all current selected data.
+
+#### public
+Default to *true*. If *false*, the overview page URL is not indicated in main page.
+
+#### type
+Type(s) of overview. Possible values are: `raw`, `table`.
+
+Multiple may be given, as a list.
+
+Default to `raw` and `table`.
+
+
+## Configuration options
+This json data is the configuration itself.
+
+No option for the moment.
+
+
+## Main page options
+
+#### title
+String that will be set as h1 title in the main page.
+
+#### description
+String going just under the title, and before all technical links.
+
+
+# ROADMAP
+
+- [x] configuration is loaded from file, and default values are added if necessary
+- [ ] add options in the config
+    - [ ] support of numbered choice types
+    - [ ] support it in the UI too: https://www.plus2net.com/javascript_tutorial/checkbox-limit.php
+    - [x] support for sampling
+- [x] don't recompile the models if nothing changed
+- [x] website is running and all pages are accessible
+- [x] show a working website, with working forms
+- [x] working example use case
+- [x] table representation of rel/2-types models
+- [x] have `templates/` dir, where multiple templates can live. Allow each configuration file to specify the template to use
+- [ ] allow for saving current sever state, so it can be stopped and restarted without data loss
+
+- [ ] allow a model to be debuggable (automatically) with SPOCK method
+    - [ ] when unsatisfiable, propose *degraded* models where one (randomly chosen) constraint is ignored.

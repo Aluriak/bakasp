@@ -1,0 +1,36 @@
+{
+    "location": "choose-your-character",
+    "base encoding": "1{ play(H, P): charc(P), ok(H,P) } 1 :- human(H). 1{ play(H, P): human(H), ok(H,P) } 1 :- charc(P).",
+    "shows": "play/2",
+    "engine": "ASP/clingo",
+
+    "users options": {
+        "type": "restricted",
+        "allowed": {
+            "Pierre": "p",
+            "David": "d",
+            "Noémie": "n",
+            "Noa": "v"
+        }
+    },
+    "choices options": {
+        "default": "all",
+        "type": "multiple",
+        "choices": {
+            "Méléas": "m",
+            "Éléa": "e",
+            "Haringer": "h",
+            "Ina": "i"
+        },
+        "data atoms": [
+            "human({user})",
+            "charc({choice})"
+        ],
+        "produced atoms": "ok({user},{choice})"
+    },
+    "output options": {
+        "model repr": "raw"
+    },
+    "overview options": {
+    }
+}

@@ -1,0 +1,12 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Who are you ?{% endblock %}
+
+{% block content %}
+    {% if elements %}
+        {% for username, userid in elements %}
+            <input type='button' value="{{username}}" class="btn" onclick="document.location.href='/user/{{userid}}';"/><br/>
+        {% endfor%}
+    {% endif%}
+{% endblock %}

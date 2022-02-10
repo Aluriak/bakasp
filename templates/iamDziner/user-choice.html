@@ -1,0 +1,27 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{preference_choice_text}}{% endblock %}
+
+{% block content %}
+<form name='choiceform' id='choiceform' method=POST>
+
+    {% if choicetype == 'multiple' %}
+            {% for choice, choiceid in choices.items() %}
+                <input type="checkbox" name="choice" value="{{choiceid}}" /> {{choice}} <br/>
+            {% endfor %}
+
+    {% elif choicetype == 'single' %}
+            {% for choice, choiceid in choices %}
+                <input type="radio" name="choice" value="{{choiceid}}" /> {{choice}} <br/>
+            {% endfor %}
+    {% else %}
+        Unsupported feature asked. Sorry. Ask the admin. That shouldn't happen.
+    {% endif %}
+
+    <br/>
+    <input type="submit" value="Set my preferences" />
+    <br/>
+
+</form>
+{% endblock %}

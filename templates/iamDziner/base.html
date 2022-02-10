@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+</head>
+<body>
+    {% if message %}
+        <p>Note: {{ message }}</p>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+    <small><a href="/">back to main page</a></small>
+</body>
+</html>
