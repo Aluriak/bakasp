@@ -159,9 +159,11 @@ If the given default choice is not compatible with the choice type (e.g. a list 
 
 #### type
 
-May be one of `single`, `multiple`, `1 or more`, `<N> or more` (with N an integer > 0), `at most <K>` (with `K` an integer > 1), or `<N> to <K>`.
+May be one of `single`, `multiple`, `at least 1`, `at least <N>` (with N an integer > 0), `at most <K>` (with `K` an integer > 1), or `<N> to <K>`.
 
-Note that `1 to 1` is equivalent to `single`, but `up to 1` is not.
+Obviously, `1 to 1` is equivalent to `single`.
+Finally, `0 or 1` is a valid, more explicit alias to `at most 1`.
+
 
 
 #### choices
