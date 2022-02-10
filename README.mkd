@@ -238,6 +238,7 @@ String going just under the title, and before all technical links.
 
 # ROADMAP
 
+### Basic features
 - [x] configuration is loaded from file, and default values are added if necessary
 - [ ] add options in the config
     - [ ] support of numbered choice types
@@ -249,12 +250,40 @@ String going just under the title, and before all technical links.
 - [x] working example use case
 - [x] table representation of rel/2-types models
 - [x] have `templates/` dir, where multiple templates can live. Allow each configuration file to specify the template to use
+- [x] examples
+    - [x] choose your character, a simple one-to-one pairing with binary preferences.
+
+### doable in less than a day
+
+- [ ] doc for newcomers
+- [ ] doc for non technical users
+- [ ] in restricted user mode, allow to only provide user names. Uid can be decided internally. Same goes for choices.
 - [ ] allow for saving current sever state, so it can be stopped and restarted without data loss
+- [ ] implement other choices types
+    - [ ] `ranking`, an order of proposition
+    - [ ] `majority judgment`, an independant ranking of propositions (many proposition may have the same rank)
+- [ ] support for python instead of ASP
+    - [ ] function taking atoms (in json format?) as input, yielding atoms (in json format?) as output
+    - [ ] function taking atoms (in json format?) as input, yielding html representation
+- [ ] plugin system for `asp models -> html repr`
+- [ ] examples
+    - [ ] choose your character, a one-to-one pairing with ranked preferences.
+    - [ ] restaurant choice based on ranks  (majority judgment demo)
+- [ ] multiservice: enable one app to run many configurations.
+
+### Needs a good amount of work
+- [ ] multiple choices scheme: users may have to prodive multiple informations for a single service to behave correctly. This needs a complete rethink of how to handle forms and output atoms.
+    - [ ] a first approach: choice become in json config a __list__ of choices, asked one by one to the user.
 
 - [ ] allow a model to be debuggable (automatically) with SPOCK method
     - [ ] when unsatisfiable, propose *degraded* models where one (randomly chosen) constraint is ignored.
 
-- [ ] plugin system for `asp models -> html repr`  (and other parts ? forms maybe ?)
+- [ ] plugin system for other parts of the soft ? forms maybe ?
 
-- [ ] doc for newcomers
-- [ ] doc for non technical users
+- [ ] when multiple metrics are used, show the solutions in a pareto front.
+    - [ ] 2D: https://chart-studio.plotly.com/~JoostvDoorn/79.embed
+    - [ ] 3D: https://chart-studio.plotly.com/~dlindmark/139.embed
+
+- [ ] examples
+    - [ ] carpooling for lunch (multiple cars, multiple restaurants, each human has its preferences of restaurants, not all have a car, trying to minimize the number of used car -> may need an exploration of paretto front)
+    - [ ] placement of peoples for dinner (needs complex forms)
