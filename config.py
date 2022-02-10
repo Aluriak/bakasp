@@ -94,11 +94,25 @@ def errors_in_configuration(cfg: dict):
     errors = []  # list of all found errors
     base_keys = set(cfg.keys())
 
-    def get_error(key, subkey, ok_values):
+    def ensure_in(key, subkey, ok_values):
         if val := cfg[key][subkey] not in ok_values:
             errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, ok_values))}")
 
-    get_error("choices options", "type", {'single', 'multiple'})
-    get_error("global options", "compilation", {'direct access', 'specific access'})
+    ensure_in("choices options", "type", {'single', 'multiple'})
+    ensure_in("global options", "compilation", {'direct access', 'specific access'})
+
+    # verify existence of the template and its content
+    full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)
+    if not os.path.exists(full_path('')):
+        errors.append(f"Template directory {cfg['global options']['template']} wasn't found in templates/ directory")
+    def ensure_file(name: str):
+        if not os.path.exists(full_path(name)):
+            errors.append(f"File {name} should have been found in templates/{cfg['global options']['template']}/, but does not exists.")
+    ensure_file('index.html')
+    ensure_file('user.html')
+    ensure_file('user-choice.html')
+    ensure_file('results.html')
+    ensure_file('thanks.html')
+
     ... # TODO
     return errors
