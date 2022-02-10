@@ -5,7 +5,7 @@ import sys
 import time
 import clyngor
 from functools import lru_cache
-from flask import Flask, request, redirect, url_for, render_template as flask_render_template, Markup
+from flask import Flask, request, redirect, url_for, render_template, Markup
 
 import model_repr
 from config import parse_configuration_file
@@ -25,7 +25,7 @@ def call_ASP_solver(encoding: str, n: int, sampling: bool) -> [frozenset]:
 
 def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     """Expect the configuration to be valid"""
-    app = Flask(__name__, template_folder='template/')
+    app = Flask(__name__, template_folder=os.path.join('templates/', cfg['global options']['template']))
     a_user_changed_its_choices = True
     models = []
 
@@ -34,12 +34,6 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         user_choices = {u: cfg["choices options"]["default"] for u in users.values()}
     else:
         user_choices = {}  # userid -> choices
-
-
-    def render_template(template_file, **kwargs):
-        "wrapper around flask.render_template, so that template file is the one indicated in configuration"
-        path = os.path.join('templates/', cfg['global options']['template'], template_file)
-        return flask_render_template(path, **kwargs)
 
 
     @lru_cache(maxsize=len(cfg["users options"]["allowed"]) if cfg["users options"]["type"] == 'restricted' else 1024)
