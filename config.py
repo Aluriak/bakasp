@@ -86,7 +86,7 @@ def parse_configuration(data:dict, *, verify: bool = True):
             print(f"Malformed configuration ({len(errors)} errors).")
             for error in errors:
                 print("\tERROR:", error)
-            return None
+            return None, raw_data
 
     return data, raw_data  # looks ok
 
