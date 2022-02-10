@@ -1,0 +1,33 @@
+{
+    "location": "choose-your-character-ranking",
+    "base encoding": "1{ play(H, P): charc(P) } 1 :- human(H).  1{ play(H, P): human(H) } 1 :- charc(P).  score(S) :- S=#sum{R,H,P: rank(H,P,R), play(H, P)}.  #maximize{S@1:score(S)}.",
+    "shows": "play/2 rank/3 score/1",
+
+    "users options": {
+        "type": "restricted",
+        "allowed": ["Pierre", "David", "Noémie", "Noa"]
+    },
+    "choices options": {
+        "default": "",
+        "type": "independant ranking",
+        "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
+        "ranks": {
+            "very interested": 3,
+            "interested": 1,
+            "ok": 0,
+            "not interested": -2,
+            "under no circumstance": -4
+        },
+        "data atoms": [
+            "human({user})",
+            "charc({choice})",
+            "rank({rank})"
+        ],
+        "produced atoms": "rank({user},{choice},{rank})"
+    },
+    "output options": {
+        "model repr": "raw"
+    },
+    "overview options": {
+    }
+}
