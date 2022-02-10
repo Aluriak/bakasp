@@ -41,6 +41,7 @@ def parse_configuration(data:dict, *, verify: bool = True):
     set_default("users options", "allowed", {})
     set_default("choices options", "default", "all")
     set_default("choices options", "type", "first")
+    set_default("choices options", "description", "Please indicate your preferences here:")
     set_default("choices options", "choices", {})
     set_default("choices options", "data atoms", [])
     set_default("choices options", "produced atoms", [])

@@ -120,7 +120,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             nonlocal a_user_changed_its_choices
             a_user_changed_its_choices = True
             return redirect(url_for('thank_you_page'))
-        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text='Please select your preference(s)', choicetype=cfg['choices options']['type'], choices=cfg['choices options']['choices'])
+        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=cfg['choices options']['type'], choices=cfg['choices options']['choices'])
 
     if 'configuration' in cfg["global options"]["public pages"]:
         @app.route('/configuration')
