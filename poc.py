@@ -129,6 +129,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     if 'compilation' in cfg["global options"]["public pages"]:
         @app.route('/compilation')
         def compilation_page():
+            a_user_changed_its_choices = True
             runtime = time.time()
             compile_models()
             runtime = time.time() - runtime
