@@ -39,6 +39,7 @@ def parse_configuration(data:dict, *, verify: bool = True):
     set_default("global options", "template", 'iamDziner')
     set_default("users options", "type", "valid-id")
     set_default("users options", "allowed", {})
+    set_default("users options", "description", "Please indicate your username:")
     set_default("choices options", "default", "all")
     set_default("choices options", "type", "first")
     set_default("choices options", "description", "Please indicate your preferences here:")

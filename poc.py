@@ -107,7 +107,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                 raise NotImplementedError("Sorry.")
         if cfg["users options"]["type"] == 'restricted':
             elements = tuple(users.items() if isinstance(users, dict) else zip(users, users))
-            return render_template("user.html", elements=elements, message=error)
+            return render_template("user.html", elements=elements, message=error, user_choice_text=cfg['users options']['description'])
         else:
             raise NotImplementedError("Sorry.")
         return header + form + footer

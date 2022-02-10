@@ -4,9 +4,12 @@
 {% block title %}Who are you ?{% endblock %}
 
 {% block content %}
+    {{user_choice_text}} <br/> <br/> <br/>
     {% if elements %}
         {% for username, userid in elements %}
-            <input type='button' value="{{username}}" class="btn" onclick="document.location.href='/user/{{userid}}';"/><br/>
+            <input type='button' value="{{username}}" class="btn" onclick="document.location.href='/user/{{userid}}';"/><br/><br/>
         {% endfor%}
-    {% endif%}
+    {% else %}
+        Unsupported username feature asked. Sorry. Ask the admin. That shouldn't happen.
+    {% endif %}
 {% endblock %}

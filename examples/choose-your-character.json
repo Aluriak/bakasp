@@ -5,11 +5,13 @@
 
     "users options": {
         "type": "restricted",
+        "description": "Qui êtes-vous ?",
         "allowed": ["Pierre", "David", "Noémie", "Noa"]
     },
     "choices options": {
         "default": "all",
         "type": "multiple",
+        "description": "Indiquez les personnages que vous accepteriez de jouer (au moins 1) :",
         "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
         "data atoms": [
             "human({user})",
