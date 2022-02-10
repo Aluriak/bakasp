@@ -69,9 +69,11 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def compute_encoding() -> str:
         return cfg["global options"]["base encoding"] + ''.join(atoms_from_choices()) + ''.join(atoms_from_shows()) + ''.join(set(atoms_from_data()))
 
-    def compile_models():
+    def compile_models(force_compilation: bool = False) -> float:
+        "return runtime"
+        starttime = time.time()
         nonlocal a_user_changed_its_choices
-        if not a_user_changed_its_choices:
+        if not a_user_changed_its_choices and not force_compilation:
             return
         a_user_changed_its_choices = False
         nonlocal models
@@ -82,6 +84,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         for idx, model in enumerate(found_models, start=1):
             html_repr = model_repr_func(idx, model, get_username_of, get_choicename_of)
             models.append(Markup(html_repr))  # Markup is necessary for flask to render the html, instead of just writing it as-is
+        return time.time() - starttime
 
     @app.route('/')
     def main_page():
@@ -129,10 +132,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     if 'compilation' in cfg["global options"]["public pages"]:
         @app.route('/compilation')
         def compilation_page():
-            a_user_changed_its_choices = True
-            runtime = time.time()
-            compile_models()
-            runtime = time.time() - runtime
+            runtime = compile_models(force_compilation=True)
             return f"done in {runtime}s"
 
     if 'overview' in cfg["global options"]["public pages"]:
