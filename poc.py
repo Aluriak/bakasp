@@ -152,7 +152,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
 
 
 def create_app(jsonfile: str) -> Flask or None:
-    cfg, raw_cfg = parse_configuration_file(sys.argv[1])
+    cfg, raw_cfg = parse_configuration_file(jsonfile)
     if cfg:
         return create_website(cfg, raw_cfg)
     else:
