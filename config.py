@@ -1,5 +1,6 @@
 """Routines related to extraction, interpretation and use of json configuration files"""
 
+import os
 import copy
 import json
 
