@@ -257,7 +257,7 @@ String going just under the title, and before all technical links.
 
 - [ ] doc for newcomers
 - [ ] doc for non technical users
-- [ ] in restricted user mode, allow to only provide user names. Uid can be decided internally. Same goes for choices.
+- [x] in restricted user mode, allow to only provide user names. Uid can be decided internally. Same goes for choices.
 - [ ] allow for saving current sever state, so it can be stopped and restarted without data loss
 - [ ] implement other choices types
     - [ ] `ranking`, an order of proposition

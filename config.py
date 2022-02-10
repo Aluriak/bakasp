@@ -3,6 +3,7 @@
 import os
 import copy
 import json
+import itertools
 
 
 def parse_configuration_file(json_file:str):
@@ -51,6 +52,18 @@ def parse_configuration(data:dict, *, verify: bool = True):
     set_default("overview options", "type", ["raw", "table"])
     set_default("main page options", "title", "")
     set_default("main page options", "description", "You are on the main page. Please provide your preferences on the user page, or/and consult the results page")
+
+    # assign uids to choices and users, if necessary
+    gen_uid = itertools.count(1)
+    if data["users options"]["type"] == 'restricted':
+        if isinstance(data["users options"]["allowed"], str):
+            data["users options"]["allowed"] = data["users options"]["allowed"].split(' ')
+        if isinstance(data["users options"]["allowed"], list):
+            data["users options"]["allowed"] = {user: next(gen_uid) for user in data["users options"]["allowed"]}
+    if isinstance(data["choices options"]["choices"], str):
+        data["choices options"]["choices"] = data["choices options"]["choices"].split(' ')
+    if isinstance(data["choices options"]["choices"], list):
+        data["choices options"]["choices"] = {choice: next(gen_uid) for choice in data["choices options"]["choices"]}
 
     # propagate values
     if data["global options"]["generated pages"] == 'all':

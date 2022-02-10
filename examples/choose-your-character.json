@@ -5,22 +5,12 @@
 
     "users options": {
         "type": "restricted",
-        "allowed": {
-            "Pierre": "p",
-            "David": "d",
-            "Noémie": "n",
-            "Noa": "v"
-        }
+        "allowed": ["Pierre", "David", "Noémie", "Noa"]
     },
     "choices options": {
         "default": "all",
         "type": "multiple",
-        "choices": {
-            "Méléas": "m",
-            "Éléa": "e",
-            "Haringer": "h",
-            "Ina": "i"
-        },
+        "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
         "data atoms": [
             "human({user})",
             "charc({choice})"
@@ -29,7 +19,5 @@
     },
     "output options": {
         "model repr": "raw"
-    },
-    "overview options": {
     }
 }
