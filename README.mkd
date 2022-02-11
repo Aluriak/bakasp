@@ -255,6 +255,7 @@ String going just under the title, and before all technical links.
 - [ ] provide ASP base encoding in a file, as a filepath, instead of being inlined (thus unreadable) in the json.
 - [x] choices must be described by a text set in configuration
 - [x] allow for saving current sever state, so it can be stopped and restarted without data loss
+- [x] provide to each model a unique, human-readable identifier that allows to reference it, even if model order is changed, or if models are removed or added after choices changes.  (done with hashname module, based on a sorted view of clyngor models)
 - [ ] implement other choices types
     - [ ] `ranking`, an order of proposition
     - [ ] `independant ranking`, to implement the majority judgment (many proposition may have the same rank)

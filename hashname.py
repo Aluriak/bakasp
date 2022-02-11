@@ -60,7 +60,7 @@ def from_obj(obj: object, nb_chunks: int = 2, **kwargs) -> str:
     return __from_hash(final_h, nb_chunks=nb_chunks, **kwargs)
 
 
-def __from_hash(h: str, nb_chunks: int, joiner: str=' ') -> str:
+def __from_hash(h: str, nb_chunks: int, joiner: str=' ', style=str.title) -> str:
     # while len(h) % nb_chunks:
         # h += '0'
     rest = len(h) % nb_chunks
@@ -75,7 +75,7 @@ def __from_hash(h: str, nb_chunks: int, joiner: str=' ') -> str:
         one, two, tee = by_chunks(h, chunk_size)
         cmps = as_adj(one), as_noun(two), as_adj(tee)
 
-    return joiner.join(cmps)
+    return style(joiner.join(cmps))
 
 
 

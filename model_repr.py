@@ -1,6 +1,8 @@
 """Functions creating html representation of ASP models.
 """
 
+import hashname
+
 
 def from_name(repr_name: str) -> callable:
     "Return the representation function corresponding to given representation name"
@@ -10,7 +12,24 @@ def from_name(repr_name: str) -> callable:
     }[repr_name]
 
 
-def as_raw(idx: int, model: frozenset, userid_to_label: callable, choiceid_to_label: callable) -> str:
+def model_stable_repr(model: frozenset) -> tuple:
+    """Return the same model, only everything is ordered so that models
+    with exact same atoms get the exact same representation.
+
+    This is used to ensure that each model is its own and unchanged identifier
+    between two encoding compilation. Its representation change only
+    if the atoms changes.
+
+    """
+    if isinstance(model, frozenset) and all(isinstance(e, tuple) and isinstance(e[0], str) and isinstance(e[1], tuple) for e in model):
+        # model is frozenset of (predicate:str, args:tuple)
+        # args are (since their order is data) left untouched.
+        return tuple(sorted(list(model)))
+    else:
+        raise ValueError(f"Received model of type {type(model)} cannot be transformed into a stable representation: {model}")
+
+
+def as_raw(idx: int, model: tuple, userid_to_label: callable, choiceid_to_label: callable) -> str:
     """Return html representation of given model"""
 
     by_pred = {}
@@ -23,10 +42,10 @@ def as_raw(idx: int, model: frozenset, userid_to_label: callable, choiceid_to_la
     if len(by_pred) == 1 and all(len(args) == 2 for args in next(iter(by_pred.values()))):
         html.append('')
         html.append(as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True))
-    return f'<h2>Solution {idx}</h2><br/>' + '<br/>'.join(html) + '<br/>'
+    return f'<h2>Solution {idx}</h2><b>— {hashname.from_obj(model)} —</b><br/><br/><br/>' + '<br/>'.join(html) + '<br/>'
 
 
-def as_table(idx: int, model: frozenset, obj_to_label: callable, att_to_label: callable, integrated: bool = False) -> str:
+def as_table(idx: int, model: tuple, obj_to_label: callable, att_to_label: callable, integrated: bool = False) -> str:
     """Return html representation of given model"""
 
     objs, atts, rels = set(), set(), {}
