@@ -22,7 +22,10 @@ def as_json_object(obj: object) -> object:
 
     if isinstance(obj, (int, float, str, bytes)):
         return obj
-    elif isinstance(obj, (list, tuple, set, frozenset)):
+    elif isinstance(obj, tuple):  # keep order
+        return list(map(as_json_object, obj))
+    elif isinstance(obj, (list, set, frozenset)):
+        print(obj)
         return sorted(list(map(as_json_object, obj)))
     elif isinstance(obj, dict):
         return [(as_json_object(k), as_json_object(v)) for k, v in sorted(list(obj.items()))]
