@@ -3,6 +3,7 @@
 import random
 import clyngor
 from flask import Flask, request, redirect, url_for, render_template, Markup
+from itertools import zip_longest
 
 
 def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this website to behave normally. Logs are necessary for further debug.'):
@@ -23,3 +24,16 @@ def call_ASP_solver(encoding: str, n: int, sampling: bool) -> [frozenset]:
     else:
         models = clyngor.solve(inline=encoding, nb_model=int(n))
         yield from models
+
+
+def by_chunks(iterable, n, fillvalue=None):
+    """Collect data into fixed-length chunks or blocks
+
+    >>> tuple(map(''.join, grouper('ABCDEFG', 3, 'x')))
+    ('ABC', 'DEF', 'Gxx')
+    >>> tuple(grouper('ABC', 2))
+    (('A', 'B'), ('C', None))
+
+    """
+    args = [iter(iterable)] * n
+    return zip_longest(*args, fillvalue=fillvalue)
