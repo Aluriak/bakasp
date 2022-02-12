@@ -1,7 +1,7 @@
 {
     "location": "choose-your-character",
-    "base encoding": "1{ play(H, P): charc(P), ok(H,P) } 1 :- human(H). 1{ play(H, P): human(H), ok(H,P) } 1 :- charc(P).",
-    "shows": "play/2",
+    "base encoding file": "data/asp/one-to-one-assoc.lp",
+    "shows": "assoc/2",
 
     "users options": {
         "type": "restricted",
@@ -14,8 +14,8 @@
         "description": "Indiquez les personnages que vous accepteriez de jouer (au moins 1) :",
         "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
         "data atoms": [
-            "human({user})",
-            "charc({choice})"
+            "user({user})",
+            "choice({choice})"
         ],
         "produced atoms": "ok({user},{choice})"
     },

@@ -29,6 +29,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data[key].setdefault(subkey, default_value)
     set_default("global options", "location", "/")
     set_default("global options", "base encoding", "")
+    set_default("global options", "base encoding file", None)
     set_default("global options", "shows", "")
     set_default("global options", "engine", "ASP/clingo")
     set_default("global options", "compilation", "direct access")
@@ -77,6 +78,10 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data["global options"]["public pages"] = data["global options"]["generated pages"]
     if data["choices options"]["default"] == 'all':
         data["choices options"]["default"] = list(data["choices options"]["choices"].values())
+    # get encoding file if any, and add its content the to base encoding
+    if data['global options']['base encoding file']:
+        with open(data['global options']['base encoding file']) as fd:
+            data['global options']['base encoding'] += '\n' + fd.read()
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):
