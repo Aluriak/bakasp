@@ -5,10 +5,12 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
+    <br/>
     <center>
     {% if message %}
-        <p>Note: {{ message }}</p>
+        <p>Note: {{ message }}</p><br/>
     {% endif %}
+    <br/>
     {% block content %}
     {% endblock %}
     <br/>
