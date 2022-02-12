@@ -14,10 +14,10 @@ def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this web
     return app
 
 
-def call_ASP_solver(encoding: str, n: int, sampling: bool) -> [frozenset]:
+def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = []) -> [frozenset]:
     "Call to the ASP solver with given encoding and n/sampling config values"
     if sampling:
-        models = list(clyngor.solve(inline=encoding))
+        models = list(clyngor.solve(inline=encoding, options=cli_options))
         if len(models) > n:
             models = random.sample(models, n)
         yield from models

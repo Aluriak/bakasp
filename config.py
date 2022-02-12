@@ -31,7 +31,6 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('global options', 'base encoding', '')
     set_default('global options', 'base encoding file', None)
     set_default('global options', 'shows', '')
-    set_default('global options', 'engine', 'ASP/clingo')
     set_default('global options', 'compilation', 'direct access')
     set_default('global options', 'generated pages', 'all')
     set_default('global options', 'public pages', None)
@@ -56,6 +55,8 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('overview options', 'type', ['raw', 'table'])
     set_default('main page options', 'title', '')
     set_default('main page options', 'description', "You are on the main page. Please provide your preferences on the user page, or/and consult the results page")
+    set_default('solver options', 'engine', 'ASP/clingo')
+    set_default('solver options', 'cli', [])
     set_default('meta', 'filesource', filesource)
     set_default('meta', 'save state', True)
 
@@ -100,6 +101,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     str_to_list("choices options", "data atoms")
     str_to_list("choices options", "produced atoms")
     str_to_list("global options", "shows")
+    str_to_list("solver options", "cli")
 
     # raise warnings for weird situations
     if data["global options"]["raise warnings"]:
@@ -127,35 +129,46 @@ def errors_in_configuration(cfg: dict):
     errors = []  # list of all found errors
     base_keys = set(cfg.keys())
 
+    # domain checking
     def ensure_in(key, subkey, ok_values):
         if val := cfg[key][subkey] not in ok_values:
             errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, ok_values))}")
 
-    ensure_in("choices options", "type", {'single', 'multiple'})
+    ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
-    ensure_in("meta", "save state", {True, False})
-    ensure_in("output options", "show human-readable id", {True, False})
+    ensure_in("solver options", "engine", {'ASP/clingo'})
 
+    # type checking
+    def ensure_is(key, subkey, *types):
+        if not isinstance((val := cfg[key][subkey]), tuple(types)):
+            errors.append(f"{key} '{subkey}' is of invalid type: value {repr(val)} of type {type(val)}. Accepted types are {', '.join(map(repr, types))}")
+
+    ensure_is('solver options', 'cli', list)
+    ensure_is("meta", "save state", bool)
+    ensure_is("output options", "show human-readable id", bool)
 
     # verify existence of the template and its content
     full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)
     if not os.path.exists(full_path('')):
         errors.append(f"Template directory {cfg['global options']['template']} wasn't found in templates/ directory")
+
     def ensure_file(name: str):
         if not os.path.exists(full_path(name)):
             errors.append(f"File {name} should have been found in templates/{cfg['global options']['template']}/, but does not exists.")
+
     ensure_file('index.html')
     ensure_file('user.html')
     ensure_file('user-choice.html')
     ensure_file('results.html')
     ensure_file('thanks.html')
 
-    if data['global options']['base encoding file']:
+
+    if cfg['global options']['base encoding file']:
         try:
-            with open(data['global options']['base encoding file']):
+            with open(cfg['global options']['base encoding file']):
                 pass
-        except Exception err:
-            errors.append(f"Base encoding file {data['global options']['base encoding file']} was provided, but couldn't be opened because of: {str(err)}")
+        except Exception as err:
+            errors.append(f"Base encoding file {cfg['global options']['base encoding file']} was provided, but couldn't be opened because of: {str(err)}")
 
     ... # TODO
     return errors
