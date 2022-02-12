@@ -139,6 +139,16 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def compute_encoding() -> str:
         return cfg["global options"]["base encoding"] + ''.join(atoms_from_choices()) + ''.join(atoms_from_shows()) + ''.join(set(atoms_from_data()))
 
+    def solve_encoding():
+        encoding = compute_encoding()
+        return utils.call_ASP_solver(
+            encoding,
+            n=cfg["output options"]["max models"],
+            sampling=cfg["output options"]["model selection"] == 'sampling',
+            cli_options=cfg['solver options']['cli'],
+            constants=cfg['solver options']['constants']
+        )
+
     def compile_models(force_compilation: bool = False) -> float:
         "return runtime"
         starttime = time.time()
@@ -148,9 +158,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         nonlocal models, previous_models_uid
         previous_models_uid = {m.uid for m in models}  # remember previous uids
         models = []
-        encoding = compute_encoding()
-        found_models = utils.call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling', cli_options=cfg['solver options']['cli'])
-        for idx, model in enumerate(found_models, start=1):
+        for idx, model in enumerate(solve_encoding(), start=1):
             models.append(ShowableModel(idx, model))
         save_history(force_save=force_compilation)
         return time.time() - starttime

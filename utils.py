@@ -22,10 +22,10 @@ def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this 
     return app
 
 
-def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = []) -> [frozenset]:
+def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}) -> [frozenset]:
     "Call to the ASP solver with given encoding and n/sampling config values"
     if sampling:
-        models = list(clyngor.solve(inline=encoding, options=cli_options))
+        models = list(clyngor.solve(inline=encoding, options=cli_options, constants=constants))
         if len(models) > n:
             models = random.sample(models, n)
         yield from models

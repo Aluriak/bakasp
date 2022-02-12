@@ -62,6 +62,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('solver options', 'engine', 'ASP/clingo')
     set_default('solver options', 'cli', [])
     set_default('solver options', 'path', 'clingo')
+    set_default('solver options', 'constants', {})
     set_default('meta', 'filesource', filesource)
     set_default('meta', 'save state', True)
 
@@ -158,6 +159,7 @@ def errors_in_configuration(cfg: dict):
     ensure_is('solver options', 'cli', list)
     ensure_is("meta", "save state", bool)
     ensure_is("output options", "show human-readable id", bool)
+    ensure_is('solver options', 'constants', dict)
 
     # verify existence of the template and its content
     full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)

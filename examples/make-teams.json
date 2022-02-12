@@ -17,4 +17,7 @@
     "output options": {
         "model repr": "raw"
     }
+    "solver options": {
+        "constants": {"nb_teams": 2}
+    }
 }
