@@ -22,15 +22,22 @@ def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this 
     return app
 
 
-def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}) -> [frozenset]:
+def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}, optimals_only: bool = False) -> [frozenset]:
     "Call to the ASP solver with given encoding and n/sampling config values"
+
+    if optimals_only:
+        if '--opt-mode=optN' not in cli_options:
+            cli_options.append('--opt-mode=optN')
+        converter = lambda ms: list(clyngor.opt_models_from_clyngor_answers(ms))
+    else:
+        converter = list
+
+    models = converter(clyngor.solve(inline=encoding, nb_model=int(n), options=cli_options, constants=constants))
     if sampling:
-        models = list(clyngor.solve(inline=encoding, options=cli_options, constants=constants))
         if len(models) > n:
             models = random.sample(models, n)
         yield from models
     else:
-        models = clyngor.solve(inline=encoding, nb_model=int(n))
         yield from models
 
 

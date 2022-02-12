@@ -63,6 +63,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('solver options', 'cli', [])
     set_default('solver options', 'path', 'clingo')
     set_default('solver options', 'constants', {})
+    set_default('solver options', 'solving mode', 'default')
     set_default('meta', 'filesource', filesource)
     set_default('meta', 'save state', True)
 
@@ -73,6 +74,9 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             data["users options"]["allowed"] = data["users options"]["allowed"].split(' ')
         if isinstance(data["users options"]["allowed"], list):
             data["users options"]["allowed"] = {user: next(gen_uid) for user in data["users options"]["allowed"]}
+    if data["choices options"]["type"] in {'multiple users', 'single user'}:
+        data["choices options"]["choices"] = data["users options"]["allowed"]
+        assert isinstance(data["users options"]["allowed"], dict)
     if isinstance(data["choices options"]["choices"], str):
         data["choices options"]["choices"] = data["choices options"]["choices"].split(' ')
     if isinstance(data["choices options"]["choices"], list):
@@ -144,10 +148,11 @@ def errors_in_configuration(cfg: dict):
         if (val := cfg[key][subkey]) not in ok_values:
             errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, ok_values))}")
 
-    ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking'})
+    ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'})
     ensure_in("users options", "type", {'restricted', 'valid-id', 'convertible'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
     ensure_in("solver options", "engine", {'ASP/clingo'})
+    ensure_in("solver options", "solving mode", {'optimals', 'default'})
     ensure_in("output options", "model repr", model_repr.names())
 
     # type checking
@@ -160,6 +165,13 @@ def errors_in_configuration(cfg: dict):
     ensure_is("meta", "save state", bool)
     ensure_is("output options", "show human-readable id", bool)
     ensure_is('solver options', 'constants', dict)
+
+
+    # dependencies checking
+    if cfg["choices options"]["type"] in {'single user', 'multiple users'}:
+        if cfg["users options"]["type"] != 'restricted':
+            errors.append(f"Choices type is user-related ({repr(cfg['choices options']['type'])}), but user type is {repr(cfg['users options']['type'])}, not the expected 'restricted'. (NB: choice of users in an undetermined set is not implemented)")
+
 
     # verify existence of the template and its content
     full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)

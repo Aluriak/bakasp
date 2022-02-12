@@ -1,8 +1,8 @@
 {
-    "location": "make-teams",
+    "location": "making-teams",
     "description": "Allow specific users to divide into two teams, allowing each user to specify other users she wants to be with",
-    "base encoding file": "data/asp/make-teams.lp",
-    "shows": "assoc/2",
+    "base encoding file": "data/asp/making-teams.lp",
+    "shows": "team/2",
 
     "users options": {
         "type": "restricted",
@@ -11,13 +11,14 @@
     },
     "choices options": {
         "default": "all",
-        "type": "other users",
+        "type": "multiple users",
         "description": "Indiquez les personnes que vous aimeriez avoir dans votre équipe :"
     },
     "output options": {
         "model repr": "raw"
     }
     "solver options": {
+        "solving mode": "optimals",
         "constants": {"nb_teams": 2}
     }
 }

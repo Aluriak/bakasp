@@ -146,7 +146,8 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             n=cfg["output options"]["max models"],
             sampling=cfg["output options"]["model selection"] == 'sampling',
             cli_options=cfg['solver options']['cli'],
-            constants=cfg['solver options']['constants']
+            constants=cfg['solver options']['constants'],
+            optimals_only=cfg['solver options']['solving mode'] == 'optimals',
         )
 
     def compile_models(force_compilation: bool = False) -> float:
