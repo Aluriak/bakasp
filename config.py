@@ -51,7 +51,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('choices options', 'produced atoms', ['ok({user},{choice})'])
     set_default('output options', 'max models', 0)
     set_default('output options', 'model selection', 'first')
-    set_default('output options', 'model repr', 'table/2')
+    set_default('output options', 'model repr', 'raw')
     set_default('output options', 'insatisfiability message', "<i>That program is unsatisfiable.</i>")
     set_default('output options', 'show human-readable id', True)
     set_default('history options', 'time format', '%Y/%m/%d %H:%M')
