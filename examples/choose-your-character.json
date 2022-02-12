@@ -12,12 +12,7 @@
         "default": "all",
         "type": "multiple",
         "description": "Indiquez les personnages que vous accepteriez de jouer (au moins 1) :",
-        "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
-        "data atoms": [
-            "user({user})",
-            "choice({choice})"
-        ],
-        "produced atoms": "ok({user},{choice})"
+        "choices": ["Méléas", "Éléa", "Haringer", "Ina"]
     },
     "output options": {
         "model repr": "raw"
