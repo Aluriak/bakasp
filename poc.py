@@ -18,9 +18,11 @@ from config import parse_configuration_file
 def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     """Expect the configuration to be valid"""
     app = Flask(__name__, template_folder=os.path.join('templates/', cfg['global options']['template']))
-    a_user_changed_its_choices = True
+    users_who_changed_their_choices = set()
     models = []
+    history = []  # (datetime, userids -> choices, new_models, lost_models)
     user_choices = {}  # userid -> choices
+    previous_models_uid = set()  # uids of found models before last compilation
 
     class ShowableModel:
         "Wrapper around model"
@@ -50,19 +52,24 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def save_state():
         if cfg['meta']['save state']:
             with open(filestate, 'w') as fd:
-                json.dump(user_choices, fd)
+                json.dump([user_choices, list(previous_models_uid), history], fd)
 
     def load_state():
+        nonlocal user_choices, previous_models_uid, history, users_who_changed_their_choices
         if cfg['meta']['save state']:
-            nonlocal user_choices
-            with open(filestate) as fd:
-                user_choices = json.load(fd)
-        a_user_changed_its_choices = True
-
-    init_user_choices()
-    filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
-    if os.path.exists(filestate):
-        load_state()
+            try:
+                with open(filestate) as fd:
+                    loaded = json.load(fd)
+            except Exception as err:
+                print(err)
+                print('Empty state loaded')
+                loaded = [{}, [], []]
+            if len(loaded) == 3:
+                user_choices, previous_models_uid, history = loaded
+            else:
+                user_choices = loaded
+            previous_models_uid = set(previous_models_uid)  # if loaded from json, is a list
+        users_who_changed_their_choices = set(map(get_username_of, user_choices))
 
 
     @lru_cache(maxsize=len(cfg["users options"]["allowed"]) if cfg["users options"]["type"] == 'restricted' else 1024)
@@ -80,11 +87,19 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                 return name
         return None
 
+
+    init_user_choices()
+    filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
+    if os.path.exists(filestate):
+        load_state()
+
     def user_choice_repr_from_request_form(form) -> set:
+        """form object -> user_choice dict value"""
         if form.__class__.__name__ == 'ImmutableMultiDict':
             return set(form.getlist('choice'))
         else:
             raise NotImplementedError(f"Form output of type {type(form)} is not handled. Value is: {repr(form)}")
+
 
     def atoms_from_choices() -> str:
         atoms_templates = cfg["choices options"]["produced atoms"]
@@ -127,17 +142,31 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def compile_models(force_compilation: bool = False) -> float:
         "return runtime"
         starttime = time.time()
-        nonlocal a_user_changed_its_choices
-        if not a_user_changed_its_choices and not force_compilation:
-            return
-        a_user_changed_its_choices = False
-        nonlocal models
+        nonlocal users_who_changed_their_choices
+        if not users_who_changed_their_choices and not force_compilation:
+            return 0.
+        nonlocal models, previous_models_uid
+        previous_models_uid = {m.uid for m in models}  # remember previous uids
         models = []
         encoding = compute_encoding()
         found_models = utils.call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling', cli_options=cfg['solver options']['cli'])
         for idx, model in enumerate(found_models, start=1):
             models.append(ShowableModel(idx, model))
+        save_history(force_save=force_compilation)
         return time.time() - starttime
+
+    def save_history(force_save: bool = False):
+        # NB: for this to work correctly, compilation must have been done just before
+        nonlocal users_who_changed_their_choices
+        if users_who_changed_their_choices or force_save:
+            models_uid = set(m.uid for m in models)
+            history.append((
+                time.strftime(cfg['history options']['time format'], time.localtime()),
+                sorted(list(users_who_changed_their_choices)) + (['autocompile'] if force_save else []),
+                sorted(list(models_uid - previous_models_uid)),
+                sorted(list(previous_models_uid - models_uid))
+            ))
+            users_who_changed_their_choices = set()
 
     @app.route('/')
     def main_page():
@@ -170,8 +199,10 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         username = get_username_of(userid) or "Unknown"
         if request.method == 'POST':
             user_choices[userid] = list(user_choice_repr_from_request_form(request.form))  # keep list, because we need json serializable data
+            users_who_changed_their_choices.add(username)
             return redirect(url_for('thank_you_page'))
-        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=cfg['choices options']['type'], choices=cfg['choices options']['choices'])
+        choices = ((cid, cval, cval in user_choices[userid]) for cid, cval in cfg['choices options']['choices'].items())
+        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=cfg['choices options']['type'], choices=choices)
 
     if 'configuration' in cfg["global options"]["public pages"]:
         @app.route('/configuration')
@@ -195,7 +226,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     if 'overview' in cfg["global options"]["public pages"]:
         @app.route('/overview')
         def overview_page():
-            return repr(user_choices) + '<br/>' + repr(cfg["users options"]["allowed"]) + '<br/>' + repr(cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding() + '</code>'
+            return repr(user_choices) + '<br/>' + repr(cfg["users options"]["allowed"]) + '<br/>' + repr(cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding() + '</code><br/>' + repr(history)
 
     if 'results' in cfg["global options"]["public pages"]:
         @app.route('/results')
@@ -216,10 +247,12 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
 
     @app.route('/thanks')
     def thank_you_page():
-        nonlocal a_user_changed_its_choices
-        a_user_changed_its_choices = True
         save_state()
         return render_template('thanks.html', username='dear user')
+
+
+    if not models:
+        compile_models(force_compilation=True)
 
     return app
 
