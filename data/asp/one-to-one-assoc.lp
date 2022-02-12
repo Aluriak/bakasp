@@ -4,7 +4,6 @@
 %    {
 %        "base encoding file": "data/asp/one-to-one-assoc.lp",
 %        "shows": "assoc/2",
-%
 %        "choices options": {
 %            "type": "multiple",
 %            "data atoms": [
