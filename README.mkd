@@ -252,6 +252,7 @@ String going just under the title, and before all technical links.
 - [ ] doc for newcomers
 - [ ] doc for non technical users
 - [x] in restricted user mode, allow to only provide user names. Uid can be decided internally. Same goes for choices.
+- [x] when choices are presented, widget are in the state representing current choices (meaning, checkboxes are checked).
 - [x] provide ASP base encoding in a file, as a filepath, instead of being inlined (thus unreadable) in the json.
 - [x] choices must be described by a text set in configuration
 - [x] allow for saving current sever state, so it can be stopped and restarted without data loss
