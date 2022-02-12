@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}History{% endblock %}
+
+{% block content %}
+    <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+    <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
+    {% for datetime, userchoices, new_models, lost_models in history %}
+        <li>{{datetime}}: {{', '.join(userchoices)}}: <color=green>+{{new_models|length}}</color> / <color=red>-{{lost_models|length}}</color></li>
+    {% endfor %}
+    </ul>
+    </div>
+    {% if no_history %}
+        <center>no history yet.</center>
+    {% endif %}
+{% endblock %}
