@@ -1,8 +1,6 @@
 """Functions creating html representation of ASP models.
 """
 
-import hashname
-
 
 def from_name(repr_name: str) -> callable:
     "Return the representation function corresponding to given representation name"
@@ -31,7 +29,7 @@ def model_stable_repr(model: frozenset) -> tuple:
         raise ValueError(f"Received model of type {type(model)} cannot be transformed into a stable representation: {model}")
 
 
-def as_raw(idx: int, model: tuple, userid_to_label: callable, choiceid_to_label: callable, show_unique_name: bool = True) -> str:
+def as_raw(idx: int, model: tuple, userid_to_label: callable, choiceid_to_label: callable, uid: str = None) -> str:
     """Return html representation of given model"""
 
     by_pred = {}
@@ -43,12 +41,12 @@ def as_raw(idx: int, model: tuple, userid_to_label: callable, choiceid_to_label:
     # if only one atom of arity 2, then show it as a table
     if len(by_pred) == 1 and all(len(args) == 2 for args in next(iter(by_pred.values()))):
         html.append('')
-        html.append(as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True, show_unique_name=False))
-    unique_name = f'<b>— {hashname.from_obj(model)} —</b><br/><br/>' if show_unique_name else ''
-    return f'<h2>Solution {idx}</h2>{unique_name}<br/>' + '<br/>'.join(html) + '<br/>'
+        html.append(as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True, uid=None))
+    uid_repr = f'<b>— {uid} —</b><br/><br/>' if uid else ''
+    return f'<h2>Solution {idx}</h2>{uid_repr}<br/>' + '<br/>'.join(html) + '<br/>'
 
 
-def as_table(idx: int, model: tuple, obj_to_label: callable, att_to_label: callable, integrated: bool = False, show_unique_name: bool = True) -> str:
+def as_table(idx: int, model: tuple, obj_to_label: callable, att_to_label: callable, integrated: bool = False, uid: str = None) -> str:
     """Return html representation of given model"""
 
     objs, atts, rels = set(), set(), {}
@@ -63,12 +61,12 @@ def as_table(idx: int, model: tuple, obj_to_label: callable, att_to_label: calla
         html.append(f' <tr>\n  <td>{obj_to_label(obj)}</td>' + ''.join(f'   <td>{"×" if att in rels[obj] else ""}</td>\n' for att in atts) + ' </tr>\n')
 
     html = '<table>' + ''.join(html) + '</table>'
-    unique_name = f'<br/><b>— {hashname.from_obj(model)} —</b><br/>' if show_unique_name else ''
+    unique_name_repr = f'<br/><b>— {uid} —</b><br/>' if uid else ''
 
     if integrated:
-        return html + unique_name
+        return html + unique_name_repr
     else:
-        return f'<h2>Solution {idx}</h2><br/>{html}{unique_name}<br/>'
+        return f'<h2>Solution {idx}</h2><br/>{html}{unique_name_repr}<br/>'
 
 
 FUNCS = {
