@@ -58,6 +58,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('main page options', 'description', "You are on the main page. Please provide your preferences on the user page, or/and consult the results page")
     set_default('solver options', 'engine', 'ASP/clingo')
     set_default('solver options', 'cli', [])
+    set_default('solver options', 'path', 'clingo')
     set_default('meta', 'filesource', filesource)
     set_default('meta', 'save state', True)
 
@@ -122,6 +123,10 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             for error in errors:
                 print("\tERROR:", error)
             return None, raw_data
+
+    # setup solver global states
+    import clyngor
+    clyngor.CLINGO_BIN_PATH = data['solver options']['path']
 
     return data, raw_data  # looks ok
 
