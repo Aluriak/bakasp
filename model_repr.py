@@ -6,10 +6,12 @@ import hashname
 
 def from_name(repr_name: str) -> callable:
     "Return the representation function corresponding to given representation name"
-    return {
-        'raw': as_raw,
-        'table/2': as_table,
-    }[repr_name]
+    return FUNCS[repr_name]
+
+
+def names() -> [str]:
+    "Return the available representation names"
+    return tuple(FUNCS.keys())
 
 
 def model_stable_repr(model: frozenset) -> tuple:
@@ -67,3 +69,9 @@ def as_table(idx: int, model: tuple, obj_to_label: callable, att_to_label: calla
         return html + unique_name
     else:
         return f'<h2>Solution {idx}</h2><br/>{html}{unique_name}<br/>'
+
+
+FUNCS = {
+    'raw': as_raw,
+    'table/2': as_table,
+}
