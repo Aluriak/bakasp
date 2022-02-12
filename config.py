@@ -50,6 +50,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default("output options", "model selection", "first")
     set_default("output options", "model repr", "table/2")
     set_default("output options", "insatisfiability message", "<i>That program is unsatisfiable.</i>")
+    set_default("output options", "show human-readable id", True)
     set_default("overview options", "public", True)
     set_default("overview options", "type", ["raw", "table"])
     set_default("main page options", "title", "")
@@ -119,6 +120,8 @@ def errors_in_configuration(cfg: dict):
     ensure_in("choices options", "type", {'single', 'multiple'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
     ensure_in("meta", "save state", {True, False})
+    ensure_in("output options", "show human-readable id", {True, False})
+
 
     # verify existence of the template and its content
     full_path = lambda p: os.path.join('templates/', cfg["global options"]["template"], p)
