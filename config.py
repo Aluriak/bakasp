@@ -5,6 +5,8 @@ import copy
 import json
 import itertools
 
+import model_repr
+
 
 def parse_configuration_file(json_file:str):
     with open(json_file) as fd:
@@ -137,18 +139,21 @@ def errors_in_configuration(cfg: dict):
 
     # domain checking
     def ensure_in(key, subkey, ok_values):
-        if val := cfg[key][subkey] not in ok_values:
+        if (val := cfg[key][subkey]) not in ok_values:
             errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, ok_values))}")
 
     ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking'})
+    ensure_in("users options", "type", {'restricted', 'valid-id', 'convertible'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
     ensure_in("solver options", "engine", {'ASP/clingo'})
+    ensure_in("output options", "model repr", model_repr.names())
 
     # type checking
     def ensure_is(key, subkey, *types):
         if not isinstance((val := cfg[key][subkey]), tuple(types)):
             errors.append(f"{key} '{subkey}' is of invalid type: value {repr(val)} of type {type(val)}. Accepted types are {', '.join(map(repr, types))}")
 
+    ensure_is("choices options", "choices", list, dict)
     ensure_is('solver options', 'cli', list)
     ensure_is("meta", "save state", bool)
     ensure_is("output options", "show human-readable id", bool)
