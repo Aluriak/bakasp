@@ -122,7 +122,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             print(f"Malformed configuration ({len(errors)} errors).")
             for error in errors:
                 print("\tERROR:", error)
-            return None, raw_data
+            return None, errors
 
     # setup solver global states
     import clyngor

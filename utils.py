@@ -14,6 +14,14 @@ def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this web
     return app
 
 
+def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this website to behave normally. Logs are necessary for further debug.', errors: list = []):
+    app = Flask(__name__)
+    @app.route('/')
+    def main_page():
+        return f"{msg}<br/><ul>\n" + ''.join(f'<li>{err}</li>\n' for err in errors) + '</ul>'
+    return app
+
+
 def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = []) -> [frozenset]:
     "Call to the ASP solver with given encoding and n/sampling config values"
     if sampling:

@@ -8,9 +8,9 @@ import itertools
 from functools import lru_cache
 from flask import Flask, request, redirect, url_for, render_template, Markup
 
+import utils
 import model_repr
 from config import parse_configuration_file
-from utils import call_ASP_solver
 
 
 def create_website(cfg: dict, raw_cfg: dict) -> Flask:
@@ -116,7 +116,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         models = []
         encoding = compute_encoding()
         model_repr_func = model_repr.from_name(cfg["output options"]["model repr"])
-        found_models = call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling', cli_options=cfg['solver options']['cli'])
+        found_models = utils.call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling', cli_options=cfg['solver options']['cli'])
         for idx, model in enumerate(found_models, start=1):
             model = model_repr.model_stable_repr(model)  # get a non-variable representation of the model. If the same model is yield in another run, that representation must be strictly the same
             html_repr = model_repr_func(idx, model, get_username_of, get_choicename_of, show_unique_name=cfg['output options']['show human-readable id'])
@@ -208,7 +208,7 @@ def create_app(jsonfile: str) -> Flask or None:
     if cfg:
         return create_website(cfg, raw_cfg)
     else:
-        print("Abort because of malformed configuration")
+        return utils.create_errorlist_app(errors=raw_cfg)
 
 
 if __name__ == "__main__":
