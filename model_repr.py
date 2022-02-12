@@ -42,7 +42,7 @@ def as_raw(idx: int, model: tuple, userid_to_label: callable, choiceid_to_label:
     if len(by_pred) == 1 and all(len(args) == 2 for args in next(iter(by_pred.values()))):
         html.append('')
         html.append(as_table(idx, model, userid_to_label, choiceid_to_label, integrated=True, show_unique_name=False))
-        unique_name = f'<b>— {hashname.from_obj(model)} —</b><br/><br/>' if show_unique_name else ''
+    unique_name = f'<b>— {hashname.from_obj(model)} —</b><br/><br/>' if show_unique_name else ''
     return f'<h2>Solution {idx}</h2>{unique_name}<br/>' + '<br/>'.join(html) + '<br/>'
 
 
