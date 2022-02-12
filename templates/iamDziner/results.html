@@ -4,7 +4,7 @@
 
 {% block content %}
     {% for model in models %}
-        {{model}} <br/>
+        {{model.html_repr}} <br/>
     {% endfor %}
     {% if not models %}
         <center>no model to show</center>

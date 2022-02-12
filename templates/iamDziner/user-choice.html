@@ -11,8 +11,8 @@
     {% if choicetype == 'multiple' %}
             <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
             <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
-            {% for choice, choiceid in choices.items() %}
-                <li><input type="checkbox" name="choice" value="{{choiceid}}" /> {{choice}} </li>
+            {% for choice, choiceid, was_chosen in choices %}
+                <li><input type="checkbox" name="choice" value="{{choiceid}}" {{check_state}}{{' checked' if was_chosen else ''}}/> {{choice}} </li>
             {% endfor %}
             </ul>
             </div>
@@ -21,10 +21,11 @@
             <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
             <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
             {% for choice, choiceid in choices %}
-                <input type="radio" name="choice" value="{{choiceid}}" /> {{choice}} <br/>
+                <input type="radio" name="choice" value="{{choiceid}}"{{' checked' if was_chosen else ''}}/> {{choice}} <br/>
             {% endfor %}
             </ul>
             </div>
+
     {% else %}
         Unsupported feature asked. Sorry. Ask the admin. That shouldn't happen.
     {% endif %}
