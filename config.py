@@ -81,7 +81,12 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     # get encoding file if any, and add its content the to base encoding
     if data['global options']['base encoding file']:
         with open(data['global options']['base encoding file']) as fd:
-            data['global options']['base encoding'] += '\n' + fd.read()
+            encoding = fd.read()
+            if '%*' not in encoding:  # not multiline comment, we can remove all comments safely
+                encoding = ' '.join(l.split('%')[0].strip() for l in encoding.splitlines(False))
+            else:  # there is some multilines comments. Arf.
+                pass  # nothing to do
+            data['global options']['base encoding'] += ' ' + encoding
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):
