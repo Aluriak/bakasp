@@ -80,8 +80,12 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data["choices options"]["default"] = list(data["choices options"]["choices"].values())
     # get encoding file if any, and add its content the to base encoding
     if data['global options']['base encoding file']:
-        with open(data['global options']['base encoding file']) as fd:
-            encoding = fd.read()
+        try:
+            with open(data['global options']['base encoding file']) as fd:
+                encoding = fd.read()
+        except:
+            pass  # ignore that, error detector will take care of raising errors
+        else:
             if '%*' not in encoding:  # not multiline comment, we can remove all comments safely
                 encoding = ' '.join(l.split('%')[0].strip() for l in encoding.splitlines(False))
             else:  # there is some multilines comments. Arf.
@@ -145,6 +149,13 @@ def errors_in_configuration(cfg: dict):
     ensure_file('user-choice.html')
     ensure_file('results.html')
     ensure_file('thanks.html')
+
+    if data['global options']['base encoding file']:
+        try:
+            with open(data['global options']['base encoding file']):
+                pass
+        except Exception err:
+            errors.append(f"Base encoding file {data['global options']['base encoding file']} was provided, but couldn't be opened because of: {str(err)}")
 
     ... # TODO
     return errors
