@@ -1,0 +1,23 @@
+{
+    "location": "choose-your-character",
+    "base encoding file": "data/asp/doesnt-exists.lp",
+    "shows": "ass oc /*2",
+
+    "users options": {
+        "type": "unvalid type",
+        "allowed": ["Pierre", "David", "Noémie", "Noa"]
+    },
+    "choices options": {
+        "default": "not all please",
+        "type": "what type ?",
+        "choices": ["Méléas", "Éléa", "Haringer", "Ina"],
+        "data atoms": [
+            "user({user})",
+            "choice({choice})"
+        ],
+        "produced atoms": "ok({user},{choice})"
+    },
+    "output options": {
+        "model repr": "everything please"
+    }
+}
