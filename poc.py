@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import time
+import itertools
 from functools import lru_cache
 from flask import Flask, request, redirect, url_for, render_template, Markup
 
@@ -74,11 +75,25 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                     yield template.rstrip(".").format(user=user, choice=choice)+ '.'
 
     def atoms_from_data() -> [str]:
-        atoms_templates = cfg["choices options"]["data atoms"]
-        for template in atoms_templates:
-            for userid in user_choices:
-                for choiceid in cfg["choices options"]["choices"].values():
-                    yield template.rstrip(".").format(user=userid, choice=choiceid)+ '.'
+        # convert ranks to the values expected by ASP
+        if cfg["choices options"]["ranks"]:
+            ranks = [int(v) for v in cfg["choices options"]["ranks"].values() if not isinstance(v, bool)]
+            absolute_ranks = ['yes' if v else 'no' for v in cfg["choices options"]["ranks"].values() if isinstance(v, bool)]
+
+        for template in cfg["choices options"]["data atoms"]:
+            valsets = {}
+            if '{user}' in template:
+                valsets['user'] = user_choices
+            if '{choice}' in template:
+                valsets['choice'] = cfg["choices options"]["choices"].values()
+            if '{rank}' in template:
+                valsets['rank'] = ranks
+            if '{absolute_rank}' in template:
+                valsets['absolute_rank'] = absolute_ranks
+            if '{any_rank}' in template:
+                valsets['any rank'] = ranks + absolute_ranks
+            for values in itertools.product(*valsets.values()):
+                yield template.rstrip(".").format(**dict(zip(valsets, values))) + '.'
 
     def atoms_from_shows() -> [str]:
         shows = cfg["global options"]["shows"]
