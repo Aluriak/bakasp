@@ -54,6 +54,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('output options', 'model repr', 'table/2')
     set_default('output options', 'insatisfiability message', "<i>That program is unsatisfiable.</i>")
     set_default('output options', 'show human-readable id', True)
+    set_default('history options', 'time format', '%Y/%m/%d %H:%M')
     set_default('overview options', 'public', True)
     set_default('overview options', 'type', ['raw', 'table'])
     set_default('main page options', 'title', '')
@@ -78,7 +79,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
 
     # propagate values
     if data["global options"]["generated pages"] == 'all':
-        data["global options"]["generated pages"] = ["user", "results", "overview", "compilation", "configuration", 'reset']
+        data["global options"]["generated pages"] = ["user", "results", "overview", "history", "compilation", "configuration", 'reset']
     if data["global options"]["public pages"] is None:
         data["global options"]["public pages"] = data["global options"]["generated pages"]
     if data["choices options"]["default"] == 'all':

@@ -171,6 +171,11 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             runtime = compile_models(force_compilation=True)
             return f"done in {runtime}s"
 
+    if 'history' in cfg["global options"]["public pages"]:
+        @app.route('/history')
+        def history_page():
+            return render_template('history.html', history=reversed(history), no_history=not history)
+
     if 'overview' in cfg["global options"]["public pages"]:
         @app.route('/overview')
         def overview_page():
