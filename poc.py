@@ -9,8 +9,10 @@ from functools import lru_cache
 from flask import Flask, request, redirect, url_for, render_template, Markup
 
 import utils
+import hashname
 import model_repr
 from config import parse_configuration_file
+
 
 
 def create_website(cfg: dict, raw_cfg: dict) -> Flask:
@@ -19,6 +21,23 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     a_user_changed_its_choices = True
     models = []
     user_choices = {}  # userid -> choices
+
+    class ShowableModel:
+        "Wrapper around model"
+        def __init__(self, idx: int, clyngor_model: frozenset):
+            self.model = model_repr.model_stable_repr(clyngor_model)
+            self.uid = hashname.from_obj(self.model) if cfg['output options']['show human-readable id'] else None
+            self.idx = idx
+            repr_func = model_repr.from_name(cfg["output options"]["model repr"])
+            # Markup is necessary for flask to render the html, instead of just writing it as-is
+            self.html_repr = Markup(repr_func(self.idx, self.model, get_username_of, get_choicename_of, uid=self.uid))
+
+        @staticmethod
+        def minus(models_a, models_b) -> list:
+            b_uids = frozenset(m.uid for m in models_b)
+            for model in models_a:
+                if model.uid not in b_uids:
+                    yield model
 
     def init_user_choices():
         nonlocal user_choices
@@ -115,12 +134,9 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         nonlocal models
         models = []
         encoding = compute_encoding()
-        model_repr_func = model_repr.from_name(cfg["output options"]["model repr"])
         found_models = utils.call_ASP_solver(encoding, n=cfg["output options"]["max models"], sampling=cfg["output options"]["model selection"] == 'sampling', cli_options=cfg['solver options']['cli'])
         for idx, model in enumerate(found_models, start=1):
-            model = model_repr.model_stable_repr(model)  # get a non-variable representation of the model. If the same model is yield in another run, that representation must be strictly the same
-            html_repr = model_repr_func(idx, model, get_username_of, get_choicename_of, show_unique_name=cfg['output options']['show human-readable id'])
-            models.append(Markup(html_repr))  # Markup is necessary for flask to render the html, instead of just writing it as-is
+            models.append(ShowableModel(idx, model))
         return time.time() - starttime
 
     @app.route('/')
