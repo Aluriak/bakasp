@@ -190,12 +190,76 @@ if this option is set to `first`, #`max models` models output by the solver are 
 if this option is set to `sampling`, #`max models` models are randomly drafted from the set of all models.
 
 #### model repr
-This option allows to control how each model is rendered on the output page.
+This option allows to finely control how each model is rendered on the output page.
 
-Legal values and their meaning:
+The very basic value for it is `"standard"`. Now, there is other possibilities.
 
-- `"raw"`: models will be shown as ASP atoms.
-- `"table/2"`: atoms are expected to be of arity 2, and showing a relation between two sets. A table will be shown.
+Appart for the special value `standard`, __this option must be a list, where each item is a dict__.
+And each dict must provide a `kind` key, providing a string being the name of a valid model representation plugin.
+
+See [ModelReprPlugin subclasses](plugins/model_repr/), the [configuration example](examples/output-customization.json)
+trying to show all capabilities of that option and the following example of valid value for model repr:
+
+    "output options": {
+        "model repr": [
+            {
+                "kind": "title",
+                "index": true,
+                "uid": true
+            },
+            {
+                "kind": "raw",
+                "shows": "all"
+            },
+            {
+                "kind": "table/2",
+                "rows": "user",
+                "columns": ["blue", "red"],
+                "source": "team/columns,rows",
+                "caption": "Show in which team (blue or red) is each user."
+            },
+        ],
+        "header repr": [
+            {"text": "This is shown before the {len(models)} models list"},
+            {
+                "kind": "table/2",
+                "rows": "user",
+                "columns": "choice",
+                "source": "choice/row,columns",
+                "caption": "Each row indicates which users a particular user wanted to have in its team."
+            }
+        ],
+        "footer repr": [
+            {"text": "This is shown after the models list (which took {runtime_compilation_repr} to compile)"},
+        ]
+    }
+
+    # (note that header and footer are also configurable using the same constructions)
+
+The model representation is broken in three parts:
+- a title, that will show the solution index and its uid
+- a raw list of (all) atoms
+- a binary table in two dimensions, where rows are users, 2 columns `blue` and `red`, and relationships between rows and columns are given by `team/2` atoms, with the first arg being the column, and the second the row. Hence, `team(1,2)` will indicate that user `2` is associated to `blue` (considering the second team is numbered 2).
+
+The default representation, `standard`, looks like this :
+
+    "output options": {
+        "model repr": [
+            {"kind": "title", "index": True, "uid": True },
+            {"kind": "raw", "shows": "all" },
+            {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
+        ],
+        "header repr": [
+            {"kind": "text", "text": "{nb_models} models found in {compilation_runtime_repr}."}
+        ],
+        "footer repr": [
+            {"kind": "text", "text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"}
+        ]
+    }
+
+You may introduce new plugins in their directory, and use them in your configuration file.
+
+
 
 #### insatisfiability message
 Defaults to "*that program is unsatisfiable*".
