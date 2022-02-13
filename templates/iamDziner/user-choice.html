@@ -1,5 +1,6 @@
 
 {% extends 'base.html' %}
+{% set expect_submit_button = True %}
 
 {% block content %}
 {{preference_choice_text}}
@@ -28,11 +29,14 @@
 
     {% else %}
         Unsupported feature asked. Sorry. Ask the admin. That shouldn't happen.
+        {% set expect_submit_button = False %}
     {% endif %}
 
-    <br/>
-    <input type="submit" value="Set my preferences" />
-    <br/>
+    {% if expect_submit_button %}
+        <br/>
+        <input type="submit" value="Set my preferences" />
+        <br/>
+    {% endif %}
 
 </form>
 {% endblock %}
