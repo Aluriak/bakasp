@@ -25,7 +25,6 @@ def as_json_object(obj: object) -> object:
     elif isinstance(obj, tuple):  # keep order
         return list(map(as_json_object, obj))
     elif isinstance(obj, (list, set, frozenset)):
-        print(obj)
         return sorted(list(map(as_json_object, obj)))
     elif isinstance(obj, dict):
         return [(as_json_object(k), as_json_object(v)) for k, v in sorted(list(obj.items()))]
