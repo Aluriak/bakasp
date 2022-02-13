@@ -54,8 +54,8 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('output options', 'model repr', 'standard')
     set_default('output options', 'insatisfiability message', "<i>That program is unsatisfiable.</i>")
     set_default('output options', 'show human-readable id', True)
-    set_default('output options', 'header repr', {"text": "{nb_models} models found in {compilation_runtime_repr}."})
-    set_default('output options', 'footer repr', {"text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"})
+    set_default('output options', 'header repr', 'standard')
+    set_default('output options', 'footer repr', 'standard')
     set_default('output options', 'sep repr', {})
     set_default('history options', 'time format', '%Y/%m/%d %H:%M')
     set_default('overview options', 'public', True)
@@ -105,6 +105,10 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             else:  # there is some multilines comments. Arf.
                 pass  # nothing to do
             data['global options']['base encoding'] += ' ' + encoding
+    if data['output options']['header repr'] == 'standard':
+        data['output options']['header repr'] = {"text": "{nb_models} models found in {compilation_runtime_repr}."}
+    if data['output options']['footer repr'] == 'standard':
+        data['output options']['footer repr'] = {"text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"}
     if data['output options']['model repr'] == 'standard':
         data['output options']['model repr'] = [
             {"kind": "title", "index": True, "uid": True },
@@ -230,11 +234,11 @@ def errors_in_configuration(cfg: dict):
     def verify_repr_rules(subkey: str):
         for rule in cfg['output options'][subkey]:
             if not isinstance(rule, dict):
-                errors.append(f"Representation rule for model {repr(rule)} is not a dict, which is not expected")
+                errors.append(f"Representation rule for {repr(subkey)} {repr(rule)} is not a dict, which is not expected")
             if 'kind' not in rule:
-                errors.append(f"Representation rule for model {repr(rule)} doesn't provide a 'kind' key, which prevent us to detect what repr plugin to call.")
+                errors.append(f"Representation rule for {repr(subkey)} {repr(rule)} doesn't provide a 'kind' key, which prevent us to detect what repr plugin to call.")
             elif rule['kind'] not in model_repr.names():
-                errors.append(f"Representation rule for model {repr(rule)} ask a repr plugin of kind {repr(rule['kind'])}, which doesn't exists. Available plugins: {', '.join(model_repr.names())}")
+                errors.append(f"Representation rule for {repr(subkey)} {repr(rule)} ask a repr plugin of kind {repr(rule['kind'])}, which doesn't exists. Available plugins: {', '.join(model_repr.names())}")
     verify_repr_rules('model repr')
     verify_repr_rules('header repr')
     verify_repr_rules('footer repr')
