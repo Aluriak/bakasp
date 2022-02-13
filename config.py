@@ -51,9 +51,12 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('choices options', 'produced atoms', ['ok({user},{choice})'])
     set_default('output options', 'max models', 0)
     set_default('output options', 'model selection', 'first')
-    set_default('output options', 'model repr', 'raw')
+    set_default('output options', 'model repr', 'standard')
     set_default('output options', 'insatisfiability message', "<i>That program is unsatisfiable.</i>")
     set_default('output options', 'show human-readable id', True)
+    set_default('output options', 'header repr', {"text": "{nb_models} models found in {compilation_runtime_repr}."})
+    set_default('output options', 'footer repr', {"text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"})
+    set_default('output options', 'sep repr', {})
     set_default('history options', 'time format', '%Y/%m/%d %H:%M')
     set_default('overview options', 'public', True)
     set_default('overview options', 'type', ['raw', 'table'])
@@ -102,6 +105,12 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             else:  # there is some multilines comments. Arf.
                 pass  # nothing to do
             data['global options']['base encoding'] += ' ' + encoding
+    if data['output options']['model repr'] == 'standard':
+        data['output options']['model repr'] = [
+            {"kind": "title", "index": True, "uid": True },
+            {"kind": "raw", "shows": "all" },
+            {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
+        ]
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):
@@ -112,6 +121,23 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     str_to_list("choices options", "produced atoms")
     str_to_list("global options", "shows")
     str_to_list("solver options", "cli")
+
+    # expand model repr, header repr and footer repr if necessary
+    for repr_opt in ('model repr', 'header repr', 'footer repr'):
+        value = data['output options'][repr_opt]
+        if isinstance(value, str):  # probably a plugin name, let's run the default
+            value = [{'kind': value}]
+        elif isinstance(value, dict) and len(value) == 0:  # it's an empty element, like empty list
+            value = []
+        elif isinstance(value, dict) and len(value) == 1 and next(iter(value)) == 'text':  # it's a text element, we can handle it
+            value = [{'kind': 'text', 'text': value['text']}]
+        elif isinstance(value, dict):  # only one element, let's put in a singleton list
+            value = [value]
+        elif isinstance(value, list):  # looks ok
+            pass  # nothing to change
+        else:
+            pass  # this will be catched by errors detection
+        data['output options'][repr_opt] = value
 
     # raise warnings for weird situations
     if data["global options"]["raise warnings"]:
@@ -153,7 +179,6 @@ def errors_in_configuration(cfg: dict):
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
     ensure_in("solver options", "engine", {'ASP/clingo'})
     ensure_in("solver options", "solving mode", {'optimals', 'default'})
-    ensure_in("output options", "model repr", model_repr.names())
 
     # type checking
     def ensure_is(key, subkey, *types):
@@ -164,6 +189,9 @@ def errors_in_configuration(cfg: dict):
     ensure_is('solver options', 'cli', list)
     ensure_is("meta", "save state", bool)
     ensure_is("output options", "show human-readable id", bool)
+    ensure_is("output options", "model repr", list)
+    ensure_is("output options", "header repr", list)
+    ensure_is("output options", "footer repr", list)
     ensure_is('solver options', 'constants', dict)
 
 
@@ -189,12 +217,27 @@ def errors_in_configuration(cfg: dict):
     ensure_file('thanks.html')
 
 
+    # check existence of encoding file, if any
     if cfg['global options']['base encoding file']:
         try:
             with open(cfg['global options']['base encoding file']):
                 pass
         except Exception as err:
             errors.append(f"Base encoding file {cfg['global options']['base encoding file']} was provided, but couldn't be opened because of: {str(err)}")
+
+
+    # verify repr model/header/footer are well-formed
+    def verify_repr_rules(subkey: str):
+        for rule in cfg['output options'][subkey]:
+            if not isinstance(rule, dict):
+                errors.append(f"Representation rule for model {repr(rule)} is not a dict, which is not expected")
+            if 'kind' not in rule:
+                errors.append(f"Representation rule for model {repr(rule)} doesn't provide a 'kind' key, which prevent us to detect what repr plugin to call.")
+            elif rule['kind'] not in model_repr.names():
+                errors.append(f"Representation rule for model {repr(rule)} ask a repr plugin of kind {repr(rule['kind'])}, which doesn't exists. Available plugins: {', '.join(model_repr.names())}")
+    verify_repr_rules('model repr')
+    verify_repr_rules('header repr')
+    verify_repr_rules('footer repr')
 
     ... # TODO
     return errors
