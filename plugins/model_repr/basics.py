@@ -35,6 +35,8 @@ class title(ModelReprPlugin):
 
     def on_model(self, idx: int, uid: str, model: object):
         """Return html representation of given model"""
+        if uid == 'Green Velvet':
+            uid = '<a href="https://www.youtube.com/watch?v=3_5oRtBDtfg#t=14.5s">Green Velvet</a>'
         uid_repr = self.options.uid_style.format(uid=uid) if self.options.uid else ''
         idx_repr = f' {idx}' if self.options.index else ''
         title_repr = self.options.title_style.format(idx_repr=idx_repr, uid_repr=uid_repr)

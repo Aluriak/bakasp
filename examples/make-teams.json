@@ -10,7 +10,7 @@
         "allowed": ["Pierre", "David", "Noémie", "Noa", "Lucas", "Nina", "Susie", "Ada"]
     },
     "choices options": {
-        "default": "all",
+        "default": "none",
         "type": "multiple users",
         "description": "Indiquez les personnes que vous aimeriez avoir dans votre équipe :"
     },
@@ -28,7 +28,7 @@
             {
                 "kind": "table/2",
                 "rows": "user",
-                "columns": ["blue", "red"],
+                "columns": ["blue", "red", "green", "yellow"],
                 "source": "team/columns,rows"
             }
         ]
