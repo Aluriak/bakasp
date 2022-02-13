@@ -64,13 +64,13 @@ class table2(ModelReprPlugin):
             if self.options.columns == 'choice':
                 return self.get_choicename_of(att)
             else:  # get the corresponding element of the columns list of items
-                self.options.columns[atts.index(att) % len(self.options.columns)]
+                return self.options.columns[atts.index(att) % len(self.options.columns)]
 
         def obj_to_label(obj: object) -> str:
             if self.options.rows == 'user':
                 return self.get_username_of(obj)
             else:  # get the corresponding element of the rows list of items
-                self.options.rows[objs.index(obj) % len(self.options.rows)]
+                return self.options.rows[objs.index(obj) % len(self.options.rows)]
 
         objs, atts, rels = fields_from_source(model.atoms, self.options.source)
         html = [' <tr>\n  <td></td>\n' + ''.join(f'   <th>{att_to_label(att)}</th>\n' for att in atts) + ' </tr>\n']
