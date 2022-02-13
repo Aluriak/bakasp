@@ -52,3 +52,26 @@ def by_chunks(iterable, n, fillvalue=None):
     """
     args = [iter(iterable)] * n
     return zip_longest(*args, fillvalue=fillvalue)
+
+
+def human_repr_of_runtime(runtime:float) -> str:
+    """return a human readable representation of given float value encoding a runtime in seconds
+
+    >>> human_repr_of_runtime(1.0)
+    '1s'
+    >>> human_repr_of_runtime(3601)
+    '1h0m1s'
+
+    """
+    if runtime >= 3600:
+        h = int(runtime) // 3600
+        s = int(runtime) % 3600
+        return f"{h}h{s // 60}m{s % 60}s"
+    if runtime > 100:
+        return f"{int(runtime) // 60}m{int(runtime) % 60}s"
+    elif runtime > 1:
+        return f"{round(runtime, 1)}s"
+    elif runtime == 1:
+        return "1s"
+    else:
+        return f"{round(runtime, 5)}s"
