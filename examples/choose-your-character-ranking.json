@@ -24,10 +24,5 @@
             "rank({rank})"
         ],
         "produced atoms": "rank({user},{choice},{rank})"
-    },
-    "output options": {
-        "model repr": "raw"
-    },
-    "overview options": {
     }
 }

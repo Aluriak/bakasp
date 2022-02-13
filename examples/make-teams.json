@@ -15,8 +15,27 @@
         "description": "Indiquez les personnes que vous aimeriez avoir dans votre équipe :"
     },
     "output options": {
-        "model repr": "raw"
-    }
+        "model repr": [
+            {
+                "kind": "title",
+                "index": true,
+                "uid": true
+            },
+            {
+                "kind": "raw",
+                "shows": "all"
+            },
+            {
+                "kind": "table/2",
+                "rows": "user",
+                "columns": ["blue", "red"],
+                "source": "assoc/rows,columns"
+            }
+        ],
+        "header repr": [{"text": "{nb_models} models found in {compilation_runtime_repr}."}],
+        "footer repr": [],
+        "sep repr": []
+    },
     "solver options": {
         "solving mode": "optimals",
         "constants": {"nb_teams": 2}
