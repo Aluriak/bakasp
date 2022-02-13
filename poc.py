@@ -143,6 +143,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         models = []
         for idx, model in enumerate(solve_encoding(), start=1):
             models.append(create_asp_model(idx, model))
+        models.sort()
         save_history(force_save=force_compilation)
         stats['compilation_runtime'] = time.time() - starttime
         render_page_elements()

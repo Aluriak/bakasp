@@ -26,6 +26,17 @@ class ShowableModel:
                 acc[pred] &= set(args)
         return ShowableModel(-1, acc, base_model.repr_funcs, show_uid=False)
 
+    def __gt__(self, othr):
+        if isinstance(othr, ShowableModel):
+            return self.atoms > othr.atoms
+        else:
+            return NotImplemented
+    def __eq__(self, othr):
+        if isinstance(othr, ShowableModel):
+            return self.atoms == othr.atoms
+        else:
+            return NotImplemented
+
 
 def model_stable_repr(model: frozenset) -> tuple:
     """Return the same model, only everything is ordered so that models
