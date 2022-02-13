@@ -105,16 +105,16 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             else:  # there is some multilines comments. Arf.
                 pass  # nothing to do
             data['global options']['base encoding'] += ' ' + encoding
-    if data['output options']['header repr'] == 'standard':
-        data['output options']['header repr'] = {"text": "{nb_models} models found in {compilation_runtime_repr}."}
-    if data['output options']['footer repr'] == 'standard':
-        data['output options']['footer repr'] = {"text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"}
     if data['output options']['model repr'] == 'standard':
         data['output options']['model repr'] = [
             {"kind": "title", "index": True, "uid": True },
             {"kind": "raw", "shows": "all" },
             {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
         ]
+    if data['output options']['header repr'] == 'standard':
+        data['output options']['header repr'] = [{"kind": "text", "text": "{nb_models} models found in {compilation_runtime_repr}."}]
+    if data['output options']['footer repr'] == 'standard':
+        data['output options']['footer repr'] = [{"kind": "text", "text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"}]
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):
