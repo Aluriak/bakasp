@@ -1,0 +1,65 @@
+{
+    "description": "Just a demo of the formalism helping to control results/output models representation",
+    "encoding": "team(1,(1;2;3;4)). team(2,(5;6;7;8))",
+
+    "users options": {
+        "type": "restricted",
+        "allowed": ["Pierre", "David", "Noémie", "Noa", "Lucas", "Nina", "Susie", "Ada"]
+    },
+    "choices options": {
+        "default": "all",
+        "type": "multiple users"
+    },
+    "output options": {
+        "model repr": [
+            {
+                "kind": "title",
+                "index": true,
+                "uid": true
+            },
+            {
+                "kind": "raw",
+                "shows": "all"
+            },
+            {
+                "kind": "table/2",
+                "rows": "user",
+                "columns": ["blue", "red"],
+                "source": "team/columns,rows",
+                "caption": "Show in which team (blue or red) is each user."
+            },
+            {
+                "kind": "copybutton",
+                "text": "copy model to clipboard",
+                "target": "atoms"
+            },
+            {"text": "This is free text, that will first get python format() with some variables such as atoms ({atoms}) or model index/number ({idx}/{len(models)}), then given as HTML for <i>rendering</i>."}
+        ],
+        "header repr": [
+            {"text": "This is shown before the {len(models)} models list"},
+            {
+                "kind": "table/2",
+                "rows": "user",
+                "columns": "choice",
+                "source": "choice/row,columns",
+                "caption": "Each row indicates which users a particular user wanted to have in its team."
+            }
+        ],
+        "footer repr": [
+            {"text": "This is shown after the models list (which took {runtime_compilation_repr} to compile)"},
+            {
+                "kind": "biseau",
+                "encoding": "link(U,V) :- team(T,U) ; team(T,V).",
+                "caption": "Graph visualization yielded with biseau"
+            },
+            {
+                "kind": "matplotlib",
+                "other args/todo": "how to use that ?",
+                "caption": "Graph visualization yielded with biseau"
+            }
+        ],
+        "sep repr": [
+            {"text": "—————————————————————MODEL—SEPARATOR————————————————————————————————"}
+        ]
+    }
+}
