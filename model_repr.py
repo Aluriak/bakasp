@@ -22,4 +22,3 @@ def get_plugin_by_name(name: str) -> ModelReprPlugin:
 
 
 MODEL_REPR_PLUGINS = ModelReprPlugin.get_plugins()
-print(MODEL_REPR_PLUGINS)

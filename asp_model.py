@@ -24,8 +24,6 @@ class ShowableModel:
         for model in models:
             for pred, args in model.atoms:
                 acc[pred] &= set(args)
-        print(acc)
-        # return {pred: list(argss) for pred, argss in acc.items() if argss}
         return ShowableModel(-1, acc, base_model.repr_funcs, show_uid=False)
 
 
