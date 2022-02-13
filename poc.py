@@ -51,10 +51,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                 print(err)
                 print('Empty state loaded')
                 loaded = [{}, [], []]
-            if len(loaded) == 3:
-                user_choices, previous_models_uid, history = loaded
-            else:
-                user_choices = loaded
+            user_choices, previous_models_uid, history = loaded
             previous_models_uid = set(previous_models_uid)  # if loaded from json, is a list
         users_who_changed_their_choices = set(map(get_username_of, user_choices))
 
