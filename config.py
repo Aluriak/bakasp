@@ -92,7 +92,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data["global options"]["public pages"] = data["global options"]["generated pages"]
     if data["choices options"]["default"] == 'all':
         data["choices options"]["default"] = list(data["choices options"]["choices"].values())
-    if data["choices options"]["default"] in {None, 'none'}:
+    if data["choices options"]["default"] is None or data["choices options"]["default"] == 'none':
         data["choices options"]["default"] = []
     # get encoding file if any, and add its content the to base encoding
     if data['global options']['base encoding file']:
