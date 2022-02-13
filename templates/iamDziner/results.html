@@ -3,10 +3,12 @@
 {% block title %}Results{% endblock %}
 
 {% block content %}
+    {{header}} <br/>
     {% for model in models %}
         {{model.html_repr}} <br/>
     {% endfor %}
     {% if not models %}
         <center>no model to show</center>
     {% endif %}
+    {{footer}} <br/>
 {% endblock %}

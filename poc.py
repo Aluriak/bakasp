@@ -12,6 +12,7 @@ import utils
 import hashname
 import model_repr
 from config import parse_configuration_file
+from asp_model import ShowableModel
 
 
 
@@ -19,27 +20,13 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     """Expect the configuration to be valid"""
     app = Flask(__name__, template_folder=os.path.join('templates/', cfg['global options']['template']))
     users_who_changed_their_choices = set()
-    models = []
+    stats = {}  # some stats about global state
+    models = []  # list of all found models
+    result_header, result_footer = '', ''  # header and footer of the result page
     history = []  # (datetime, userids -> choices, new_models, lost_models)
     user_choices = {}  # userid -> choices
     previous_models_uid = set()  # uids of found models before last compilation
 
-    class ShowableModel:
-        "Wrapper around model"
-        def __init__(self, idx: int, clyngor_model: frozenset):
-            self.model = model_repr.model_stable_repr(clyngor_model)
-            self.uid = hashname.from_obj(self.model) if cfg['output options']['show human-readable id'] else None
-            self.idx = idx
-            repr_func = model_repr.from_name(cfg["output options"]["model repr"])
-            # Markup is necessary for flask to render the html, instead of just writing it as-is
-            self.html_repr = Markup(repr_func(self.idx, self.model, get_username_of, get_choicename_of, uid=self.uid))
-
-        @staticmethod
-        def minus(models_a, models_b) -> list:
-            b_uids = frozenset(m.uid for m in models_b)
-            for model in models_a:
-                if model.uid not in b_uids:
-                    yield model
 
     def init_user_choices():
         nonlocal user_choices
@@ -87,11 +74,6 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
                 return name
         return None
 
-
-    init_user_choices()
-    filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
-    if os.path.exists(filestate):
-        load_state()
 
     def user_choice_repr_from_request_form(form) -> set:
         """form object -> user_choice dict value"""
@@ -150,6 +132,9 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             optimals_only=cfg['solver options']['solving mode'] == 'optimals',
         )
 
+    def create_asp_model(idx: int, clyngor_model: frozenset) -> ShowableModel:
+        return ShowableModel(idx, clyngor_model, (p.repr_model for p in model_repr_plugins), show_uid=cfg['output options']['show human-readable id'])
+
     def compile_models(force_compilation: bool = False) -> float:
         "return runtime"
         starttime = time.time()
@@ -160,9 +145,22 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         previous_models_uid = {m.uid for m in models}  # remember previous uids
         models = []
         for idx, model in enumerate(solve_encoding(), start=1):
-            models.append(ShowableModel(idx, model))
+            models.append(create_asp_model(idx, model))
         save_history(force_save=force_compilation)
-        return time.time() - starttime
+        stats['compilation_runtime'] = time.time() - starttime
+        render_page_elements()
+        return stats['compilation_runtime']
+
+    def render_page_elements():
+        nonlocal result_header, result_footer
+        stats['models'] = list(models)
+        stats['nb_models'] = len(models)
+        stats['compilation_runtime_repr'] = utils.human_repr_of_runtime(stats['compilation_runtime'])
+        stats['common_atoms'] = ShowableModel.intersection(models)
+        result_header = Markup(''.join(p.repr_header(**stats) for p in header_repr_plugins))
+        result_footer = Markup(''.join(p.repr_footer(**stats) for p in footer_repr_plugins))
+
+
 
     def save_history(force_save: bool = False):
         # NB: for this to work correctly, compilation must have been done just before
@@ -242,7 +240,7 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
         def results_page():
             if cfg["global options"]["compilation"] == 'direct access':
                 compile_models()
-            return render_template('results.html', models=models,
+            return render_template('results.html', models=models, header=result_header, footer=result_footer,
                                    message=cfg["output options"]["insatisfiability message"] if not models else "")
 
     if 'reset' in cfg["global options"]["public pages"] and cfg['meta']['save state']:
@@ -258,6 +256,18 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
     def thank_you_page():
         save_state()
         return render_template('thanks.html', username='dear user')
+
+
+    # Initialization batch
+    init_user_choices()
+    filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
+    if os.path.exists(filestate):
+        load_state()
+
+    # Get the renderer of models, headers and footers from the plugins system and accordingly to the configuration.
+    model_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model repr'], get_username_of, get_choicename_of))
+    header_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['header repr'], get_username_of, get_choicename_of))
+    footer_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['footer repr'], get_username_of, get_choicename_of))
 
 
     if not models:
