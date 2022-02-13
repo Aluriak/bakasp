@@ -264,8 +264,12 @@ String going just under the title, and before all technical links.
     - [ ] `independant ranking`, to implement the majority judgment (many proposition may have the same rank)
 - [ ] implement other model representations
     - [ ] majority judgment
-- [ ] plugin system for `asp models -> html repr`
+- [x] plugin system for `asp models -> html repr`
+- [ ] implement funny plugins
+    - [ ] biseau
+    - [ ] matplotlib
 - [ ] examples
+    - [x] make teams, allowing each user to select other users he wants to be with.
     - [ ] choose your character, a one-to-one pairing with ranked preferences.
     - [ ] choose your character among many, a maybe-to-one pairing with ranked preferences, and group optimization based on roles.
     - [ ] restaurant choice based on ranks  (majority judgment demo)
