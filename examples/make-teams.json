@@ -31,10 +31,7 @@
                 "columns": ["blue", "red"],
                 "source": "assoc/rows,columns"
             }
-        ],
-        "header repr": [{"text": "{nb_models} models found in {compilation_runtime_repr}."}],
-        "footer repr": [],
-        "sep repr": []
+        ]
     },
     "solver options": {
         "solving mode": "optimals",
