@@ -29,12 +29,12 @@
                 "kind": "table/2",
                 "rows": "user",
                 "columns": ["blue", "red"],
-                "source": "assoc/rows,columns"
+                "source": "team/columns,rows"
             }
         ]
     },
     "solver options": {
         "solving mode": "optimals",
-        "constants": {"nb_teams": 2}
+        "constants": {"nb_teams": 4}
     }
 }
