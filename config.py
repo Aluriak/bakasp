@@ -44,7 +44,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('users options', 'allowed', {})
     set_default('users options', 'description', "Please indicate your username:")
     set_default('choices options', 'default', 'all')
-    set_default('choices options', 'type', 'first')
+    set_default('choices options', 'type', 'multiple')
     set_default('choices options', 'description', "Please indicate your preferences here:")
     set_default('choices options', 'choices', {})
     set_default('choices options', 'ranks', {})
