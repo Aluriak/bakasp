@@ -81,7 +81,7 @@ def __from_hash(h: str, nb_chunks: int, joiner: str=' ', style=str.title) -> str
 
 
 
-def test_collision():
+def run_collision_test():
     import os
     import json
     import random
@@ -135,8 +135,11 @@ def test_collision():
         print('prev - miss:', len(previous - missing_hashes), f'({round(100*len(previous - missing_hashes) / both, 1)}%)')
         print('prev | miss:', len(previous | missing_hashes), f'({round(100*len(previous | missing_hashes) / both, 1)}%)')
         print('prev & miss:', len(previous & missing_hashes), f'({round(100*len(previous & missing_hashes) / both, 1)}%)')
-    with open('data/unseens.json', 'w') as fd:
-        fd.write(json.dumps(sorted(previous - missing_hashes)))
+        with open('data/unseens.json', 'w') as fd:
+            fd.write(json.dumps(sorted(previous - missing_hashes)))
+    else:
+        with open('data/unseens.json', 'w') as fd:
+            fd.write(json.dumps(sorted(missing_hashes)))
     print('data/unseens.json created with missing hashes')
 
     # NB: after running that routine around twenty times, i got 11 remaining unseen hashes:
@@ -148,4 +151,4 @@ if __name__ == "__main__":
     new_obj = lambda: tuple(random.randint(1, 1000) for _ in range(random.randint(1, 10)))
     mean_of = lambda t: round(sum(t) / len(t), 3)
     # for _ in range(10):
-    test_collision()
+    run_collision_test()
