@@ -17,8 +17,7 @@ def fields_from_source(atoms: iter, source: str) -> (list, list, dict):
     When atom arguments are not relevant, underscore may be used.
 
     >>> fields_from_source([('assoc', (1, 8, 2, 7)), ('assoc', (2, 9, 3, 8))], "assoc/columns,_,rows,_")
-    ({'rows': [2, 3], 'columns': [1, 2], 'relations': {3: {2}, 2: {1}}})
-    ([2, 3], [1, 2], {3: {2}, 2: {1}})
+    ([2, 3], [1, 2], {2: {1}, 3: {2}})
 
     If an atom argument has a value different from rows, columns or underscore,
     it is understood as a value that the atom must have for it to be considered while building the outputs.
