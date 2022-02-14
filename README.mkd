@@ -65,6 +65,9 @@ If configuration said so, it's the access to that page that provoke the compilat
 ### /results
 The representation of given models.
 
+### /history
+The list of changes and their influence on models.
+
 ### /overview
 The current choices of all users.
 
@@ -74,6 +77,15 @@ Access to the full json configuration, if allowed by the said configuration.
 ### /configuration/raw
 Access to the input json configuration, if allowed by the said configuration.
 
+
+## More examples
+See the [examples/](examples/) directory, containing, among others:
+
+- a [team maker](examples/make-teams.json) config, where users indicate who they want in their team, and N teams of equal number of players are formed, trying to content a maximum of peoples.
+- a [score-balanced team maker](examples/make-score-balanced-teams.json) config, typically useful in laser tag, when you need, knowing the score of each participant, to equilibrate the teams compositions.
+- a [pairing](examples/choose-your-character.json) config, where each user is to indicate characters he wants to play ; output is the pairing user/character allowed by constraints.
+- a [output control demo](examples/output-customization.json) config, showing the capabilities of the model representation plugin system.
+- a [malformed config](examples/bad-config.json), just for you to see how not write your own, or to see how the program behave in presence of such mistypes.
 
 
 # Options
@@ -332,8 +344,10 @@ String going just under the title, and before all technical links.
 - [ ] implement funny plugins
     - [ ] biseau
     - [ ] matplotlib
+    - [ ] stats over all models
 - [ ] examples
-    - [x] make teams, allowing each user to select other users he wants to be with.
+    - [x] make balanced teams, allowing each user to select other users he wants to be with.
+    - [ ] make balanced teams, grouping users depending of their personal score, trying to get N teams of same score.   (laser tag example)
     - [ ] choose your character, a one-to-one pairing with ranked preferences.
     - [ ] choose your character among many, a maybe-to-one pairing with ranked preferences, and group optimization based on roles.
     - [ ] restaurant choice based on ranks  (majority judgment demo)
