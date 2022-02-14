@@ -5,6 +5,7 @@ import copy
 import json
 import itertools
 
+import utils
 import model_repr
 
 
@@ -85,7 +86,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     if isinstance(data["choices options"]["choices"], list):
         data["choices options"]["choices"] = {choice: next(gen_uid) for choice in data["choices options"]["choices"]}
 
-    # propagate values
+    # derivate values
     if data["global options"]["generated pages"] == 'all':
         data["global options"]["generated pages"] = ["user", "results", "overview", "history", "compilation", "configuration", 'reset']
     if data["global options"]["public pages"] is None:
@@ -94,6 +95,9 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data["choices options"]["default"] = list(data["choices options"]["choices"].values())
     if data["choices options"]["default"] is None or data["choices options"]["default"] == 'none':
         data["choices options"]["default"] = []
+    data["choices options"]['type repr'] = data["choices options"]['type']  # if type is a range, this ensure to conserve programmatic and human representation
+    if utils.is_human_repr_of_range(data["choices options"]['type']):
+        data["choices options"]['type'] = utils.range_from_human_repr(data["choices options"]['type'])
     # get encoding file if any, and add its content the to base encoding
     if data['global options']['base encoding file']:
         try:
@@ -176,15 +180,22 @@ def errors_in_configuration(cfg: dict):
     base_keys = set(cfg.keys())
 
     # domain checking
-    def ensure_in(key, subkey, ok_values):
+    def ensure_in(key, subkey, ok_values, other_valid_values=set()):
         if (val := cfg[key][subkey]) not in ok_values:
-            errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, ok_values))}")
+            if just_false_on_error:
+                return False
+            errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, set(ok_values)+set(other_valid_values)))}")
 
-    ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'})
     ensure_in("users options", "type", {'restricted', 'valid-id', 'convertible'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
     ensure_in("solver options", "engine", {'ASP/clingo'})
     ensure_in("solver options", "solving mode", {'optimals', 'default'})
+
+    if isinstance(cfg["choices options"]['type'], tuple) and len(cfg["choices options"]['type']) == 2 and isinstance(cfg["choices options"]['type'][0], (int, type(None))) and isinstance(cfg["choices options"]['type'][1], (int, type(None))):
+        pass
+    else:
+        ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'}, {'at least|most <N>', 'less|more than <N>', 'between <N> and <K>'})
+
 
     # type checking
     def ensure_is(key, subkey, *types):

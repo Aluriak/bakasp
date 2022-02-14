@@ -206,8 +206,8 @@ def create_website(cfg: dict, raw_cfg: dict) -> Flask:
             user_choices[userid] = list(user_choice_repr_from_request_form(request.form))  # keep list, because we need json serializable data
             users_who_changed_their_choices.add(username)
             return redirect(url_for('thank_you_page'))
-        choices = ((cid, cval, cval in user_choices[userid]) for cid, cval in cfg['choices options']['choices'].items())
-        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=cfg['choices options']['type'], choices=choices)
+        choices = ((idx, cid, cval, cval in user_choices[userid]) for idx, (cid, cval) in enumerate(cfg['choices options']['choices'].items()))
+        return render_template('user-choice.html', username=username, userid=userid, preference_choice_text=cfg['choices options']['description'], choicetype=utils.range_as_js(cfg['choices options']['type']), choicetype_repr=cfg['choices options']['type repr'], choices=choices)
 
     if 'configuration' in cfg["global options"]["public pages"]:
         @app.route('/configuration')

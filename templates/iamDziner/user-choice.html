@@ -12,7 +12,7 @@
     {% if choicetype in ('multiple', 'multiple users') %}
             <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
             <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
-            {% for choice, choiceid, was_chosen in choices %}
+            {% for idx, choice, choiceid, was_chosen in choices %}
                 <li><input type="checkbox" name="choice" value="{{choiceid}}" {{' checked' if was_chosen else ''}}/> {{choice}} </li>
             {% endfor %}
             </ul>
@@ -21,21 +21,63 @@
     {% elif choicetype == 'single' %}
             <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
             <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
-            {% for choice, choiceid, was_chosen in choices %}
+            {% for idx, choice, choiceid, was_chosen in choices %}
                 <input type="radio" name="choice" value="{{choiceid}}"{{' checked' if was_chosen else ''}}/> {{choice}} <br/>
             {% endfor %}
             </ul>
             </div>
 
+    {% elif choicetype != choicetype_repr and choicetype == (1, 1) %}
+            <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+            <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
+            {% for idx, choice, choiceid, was_chosen in choices %}
+                <input type="radio" name="choice" value="{{choiceid}}"{{' checked' if was_chosen else ''}}/> {{choice}} <br/>
+            {% endfor %}
+            </ul>
+            </div>
+
+    {% elif choicetype != choicetype_repr %}  <!-- this means it's a human readable range  -->
+            <script type="text/javascript">
+                function nbchkctrl(cid) {
+                    var count = 0;
+                    for(var i = 0; i < document.choiceform.choice.length; i++){
+                        if(document.choiceform.choice[i].checked){
+                            count++;
+                    }}if (count > {{choicetype[1]}}){
+                        // document.choiceform.choice[cid].checked = false ;
+                        document.getElementById("submitbutton").value = "Please select {{choicetype_repr}} elements";
+                        document.getElementById("submitbutton").disabled = true;
+                    }else if (count < {{choicetype[0]}}){
+                        // document.choiceform.choice[cid].checked = true ;
+                        document.getElementById("submitbutton").value = "Please select {{choicetype_repr}} elements";
+                        document.getElementById("submitbutton").disabled = true;
+                    }else{
+                        document.getElementById("submitbutton").value = "Set my preferences";
+                        document.getElementById("submitbutton").disabled = false;
+                    }
+                }
+            </script>
+            <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+            <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
+            {% for idx, choice, choiceid, was_chosen in choices %}
+                <li><input type="checkbox" name="choice" value="{{choiceid}}" onclick="nbchkctrl({{idx}})" {{' checked' if was_chosen else ''}}/> {{choice}} </li>
+            {% endfor %}
+            </ul>
+            </div>
+
     {% else %}
-        Unsupported feature asked ('{{choicetype}}'). Sorry. Ask the admin. That shouldn't happen.
+        Unsupported feature asked ('{{choicetype}}'|'{{choicetype_repr}}'). Sorry. Ask the admin. That shouldn't happen.
         {% set expect_submit_button = False %}
     {% endif %}
 
     {% if expect_submit_button %}
         <br/>
-        <input type="submit" value="Set my preferences" />
+        <input id=submitbutton type="submit" value="Set my preferences" />
         <br/>
+
+        {% if choicetype != choicetype_repr %}
+            <script>nbchkctrl(0)</script>
+        {% endif %}
     {% endif %}
 
 </form>

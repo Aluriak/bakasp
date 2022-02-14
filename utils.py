@@ -1,5 +1,5 @@
 
-
+import re
 import random
 import clyngor
 from flask import Flask, request, redirect, url_for, render_template, Markup
@@ -44,9 +44,9 @@ def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [
 def by_chunks(iterable, n, fillvalue=None):
     """Collect data into fixed-length chunks or blocks
 
-    >>> tuple(map(''.join, grouper('ABCDEFG', 3, 'x')))
+    >>> tuple(map(''.join, by_chunks('ABCDEFG', 3, 'x')))
     ('ABC', 'DEF', 'Gxx')
-    >>> tuple(grouper('ABC', 2))
+    >>> tuple(by_chunks('ABC', 2))
     (('A', 'B'), ('C', None))
 
     """
@@ -75,3 +75,89 @@ def human_repr_of_runtime(runtime:float) -> str:
         return "1s"
     else:
         return f"{round(runtime, 5)}s"
+
+
+def range_from_human_repr(s: str, accept_impossible_range:bool = False) -> (int, int):
+    """
+
+    >>> range_from_human_repr('at least 1')
+    (1, None)
+    >>> range_from_human_repr('any')
+    (None, None)
+    >>> range_from_human_repr('between 3 and 7')
+    (3, 7)
+    >>> range_from_human_repr('at most -18')
+    (None, -18)
+
+    Combine with comma:
+
+    >>> range_from_human_repr('less than 3, at least 1')
+    (1, 2)
+    >>> range_from_human_repr('7 or more, less than 10')
+    (7, 9)
+
+    Order doesn't count:
+
+    >>> range_from_human_repr('less than 3, less than 10, less than 7')
+    (None, 2)
+    >>> range_from_human_repr('less than 3, less than 7, less than 10')
+    (None, 2)
+    >>> range_from_human_repr('less than 7, less than 10, less than 3')
+    (None, 2)
+    >>> range_from_human_repr('more than 0, 9 or less')
+    (1, 9)
+    >>> range_from_human_repr('more than 0, exactly 4, ')
+    (4, 4)
+
+    Impossible ranges raises ValueError unless explicitely accepted:
+
+    >>> range_from_human_repr('more than 0, less than 0', accept_impossible_range=True)
+    (1, -1)
+    >>> range_from_human_repr('exactly 3, exactly 4', accept_impossible_range=True)
+    (4, 3)
+
+    """
+    def get_constraint(s: str):
+        def get(m, i=0):  return None if m.groups()[i] is None else int(m.groups()[i])
+        if s == 'any':
+            return None, None
+        if m := re.fullmatch(r'at least (-?[0-9]+)', s):
+            return get(m), None
+        if m := re.fullmatch(r'at most (-?[0-9]+)', s):
+            return None, get(m)
+        if m := re.fullmatch(r'less than (-?[0-9]+)', s):
+            return None, get(m)-1
+        if m := re.fullmatch(r'more than (-?[0-9]+)', s):
+            return get(m)+1, None
+        if m := re.fullmatch(r'between (-?[0-9]+) and (-?[0-9]+)', s):
+            return get(m), get(m,1)
+        if m := re.fullmatch(r'(-?[0-9]+) or more', s):
+            return get(m), None
+        if m := re.fullmatch(r'(-?[0-9]+) or less', s):
+            return None, get(m)
+        if m := re.fullmatch(r'exactly (-?[0-9]+)', s):
+            return get(m), get(m)
+        raise ValueError(f"Invalid range format: {repr(s)}.")
+    constraints = (get_constraint(sub) for sub in map(str.strip, s.split(',')) if sub)
+    low, hih = next(constraints)
+    for l, h in constraints:
+        if l is not None:
+            low = l if low is None else (l if l > low else low)
+        if h is not None:
+            hih = h if hih is None else (h if h < hih else hih)
+    refuse_impossible_range = not accept_impossible_range
+    if refuse_impossible_range and low is not None and hih is not None and low > hih:
+        raise ValueError(f"Range [{low}:{hih}] obtained from {repr(s)} is not a valid range.")
+    return low, hih
+
+def is_human_repr_of_range(s: str) -> bool:
+    try:
+        range_from_human_repr(s)
+    except ValueError:
+        return False
+    return True
+
+
+def range_as_js(r):
+    low, hih = r
+    return ('-Infinity' if low is None else low), ('Infinity' if hih is None else hih)

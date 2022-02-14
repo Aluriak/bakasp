@@ -10,7 +10,7 @@
     },
     "choices options": {
         "default": "all",
-        "type": "multiple",
+        "type": "at least 1",
         "description": "Indiquez les personnages que vous accepteriez de jouer (au moins 1) :",
         "choices": ["Méléas", "Éléa", "Haringer", "Ina"]
     }
