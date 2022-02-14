@@ -116,6 +116,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             {"kind": "title", "index": True, "uid": True },
             {"kind": "raw", "shows": "all" },
             {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
+            {"kind": "copy2clipboard"},
         ]
     if data['output options']['header repr'] == 'standard':
         data['output options']['header repr'] = [{"kind": "text", "text": "{nb_models} models found in {compilation_runtime_repr}."}]

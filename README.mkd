@@ -333,7 +333,7 @@ String going just under the title, and before all technical links.
 - [x] choices must be described by a text set in configuration
 - [x] allow for saving current sever state, so it can be stopped and restarted without data loss
 - [x] provide to each model a unique, human-readable identifier that allows to reference it, even if model order is changed, or if models are removed or added after choices changes.  (done with hashname module, based on a sorted view of clyngor models)
-- [ ] each model has a copy2clipboard button, to easily share their result in the most sensible way.
+- [x] each model has a copy2clipboard button, to easily share their result in the most sensible way.
 - [x] allow users to get the list of new and lost models their preferences created.  (an history page, saying «USER changed its preferences, leading to N new models and L lost models»)
 - [ ] implement other choices types
     - [ ] `ranking`, an order of proposition

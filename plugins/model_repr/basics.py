@@ -47,3 +47,49 @@ class title(ModelReprPlugin):
 
     def on_footer(self):
         return ''
+
+
+class copy2clipboard(ModelReprPlugin):
+    OPTIONS = {
+        'label': 'Copy',
+        'label copied': 'Copied !',
+        'label copied duration': 1000,  # in milliseconds
+        'target': 'atoms',
+        'button id': None,
+    }
+    def on_model(self, idx: int, uid: str, model: object):
+        if self.options.target == 'atoms':
+            text = repr(model.atoms).replace("'", '"').replace('"', r'\"')
+            # text = uid
+        elif self.options.target == 'title':
+            text = f'Solution {idx} ({uid}) of {len(model)} atoms'
+        elif self.options.target == 'uid':
+            text = uid
+        elif self.options.target == 'result':
+            text = 'not implemented'
+        elif self.options.target == 'encoding':
+            text = f'target option of copy2clipboard ModelReprPlugin is not valid: {repr(self.options.target)}.'
+        else:
+            text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}'
+        bid = f'{idx}-{self.options.button_id}' if self.options.button_id else idx
+        return self.__create_button(bid, text)
+
+    def on_header(self, **kwargs):
+        if self.options.target == 'encoding':
+            text = kargs.get('encoding', 'no encoding provided to copy2clipboard.on_header method')
+        else:
+            text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}'
+        bid = f'{idx}-{self.options.button_id}' if self.options.button_id else idx
+        return self.__create_button(bid, text)
+
+    def on_footer(self):
+        if self.options.target == 'encoding':
+            text = kargs.get('encoding', 'no encoding provided to copy2clipboard.on_header method')
+        else:
+            text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}'
+        bid = f'{idx}-{self.options.button_id}' if self.options.button_id else idx
+        return self.__create_button(bid, text)
+
+
+    def __create_button(self, bid, text):
+        return f"""<br/><button id="copybutton-{bid}" onclick='copyTextToClipboard("copybutton-{bid}", "{text}", "{self.options.label_copied}", {self.options.label_copied_duration})' >{self.options.label}</button><br/>"""

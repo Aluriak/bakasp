@@ -3,6 +3,22 @@
 {% block title %}Results{% endblock %}
 
 {% block content %}
+
+
+
+<script>
+function copyTextToClipboard(copybutton, text, new_but_text="Copied !", duration=1000 ) {
+    navigator.clipboard.writeText(text)
+    let bttxt = document.getElementById(copybutton).innerHTML;
+    document.getElementById(copybutton).innerHTML = new_but_text
+    setTimeout(function() {document.getElementById(copybutton).innerHTML = bttxt}, duration)  // revert button text after 1 sec
+// function to place innerHTML of target id in clipboard.
+} function copyToClipboard(copybutton, target, new_but_text="Copied !", duration=1000 ) {
+    copyTextToClipboard(copybutton, document.getElementById(target).innerHTML, new_but_text, duration)
+}
+</script>
+
+
     {{header}} <br/>
     {% for model in models %}
         {{model.html_repr}} <br/>
