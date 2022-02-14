@@ -298,9 +298,9 @@ String going just under the title, and before all technical links.
 
 ### Basic features
 - [x] configuration is loaded from file, and default values are added if necessary
-- [ ] add options in the config
-    - [ ] support of numbered choice types
-    - [ ] support it in the UI too: https://www.plus2net.com/javascript_tutorial/checkbox-limit.php
+- [x] add options in the config
+    - [x] support of numbered choice types
+    - [x] support it in the UI too: https://www.plus2net.com/javascript_tutorial/checkbox-limit.php
     - [x] support for sampling
 - [x] don't recompile the models if nothing changed
 - [x] website is running and all pages are accessible
