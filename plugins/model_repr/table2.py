@@ -3,6 +3,52 @@
 from model_repr import ModelReprPlugin
 
 
+class table2(ModelReprPlugin):
+    OPTIONS = {
+        "kind": 'table/2',
+        "rows": 'user',
+        "columns": 'choice',
+        "source": 'assoc/rows,columns',
+        "caption": '',
+        "caption style": '<br/><small><i>{caption}</i></small><br/>',
+        # pair mode : if enabled, will present data differently if it is a one-to-one pairing.
+        'enable pair repr if possible': True,
+        'pair link text': 'has',
+    }
+
+    def on_model(self, idx: int, uid: str, model: object):
+        """Return html representation of given model"""
+
+        def att_to_label(att: object) -> str:
+            if self.options.columns == 'choice':
+                return self.get_choicename_of(att)
+            else:  # get the corresponding element of the columns list of items
+                return self.options.columns[atts.index(att) % len(self.options.columns)]
+
+        def obj_to_label(obj: object) -> str:
+            if self.options.rows == 'user':
+                return self.get_username_of(obj)
+            else:  # get the corresponding element of the rows list of items
+                return self.options.rows[objs.index(obj) % len(self.options.rows)]
+
+        objs, atts, rels = fields_from_source(model.atoms, self.options.source)
+        if self.options.enable_pair_repr_if_possible and all(len(assocs) == 1 for assocs in rels.values()) and sum(1 for _ in rels.values()) == sum(1 for _ in atts):
+            # it's a one-to-one relationship between objs and atts
+            # let's show them in a readable manner
+            html = []
+            for obj in objs:
+                att = next(iter(rels[obj]))
+                html.append(f"<li>{obj_to_label(obj)} {self.options.pair_link_text} {att_to_label(att)}</li>")
+            html = '<div style="display: inline-block"><ul style="text-align: left; list-style-type:none">' + ''.join(html) + '</ul></div>'
+        else:  # it's not just a one-to-one association
+            html = [' <tr>\n  <td></td>\n' + ''.join(f'   <th>{att_to_label(att)}</th>\n' for att in atts) + ' </tr>\n']
+            for obj in objs:
+                html.append(f' <tr>\n  <td>{obj_to_label(obj)}</td>' + ''.join(f'   <td>{"×" if att in rels[obj] else ""}</td>\n' for att in atts) + ' </tr>\n')
+            caption = self.options.caption_style.format(caption=self.options.caption) if self.options.caption else ''
+            html = '<table>' + ''.join(html) + '</table>' + caption
+        return html
+
+
 def fields_from_source(atoms: iter, source: str) -> (list, list, dict):
     """
     Returns list of rows, list of columns, and relations between the two
@@ -44,43 +90,3 @@ def fields_from_source(atoms: iter, source: str) -> (list, list, dict):
                 ret_columns.add(dargs['columns'])
                 ret_relations.setdefault(dargs['rows'], set()).add(dargs['columns'])
     return sorted(list(ret_rows)), sorted(list(ret_columns)), ret_relations
-
-
-class table2(ModelReprPlugin):
-    OPTIONS = {
-        "kind": 'table/2',
-        "rows": 'user',
-        "columns": 'choice',
-        "source": 'assoc/rows,columns',
-        "caption": '',
-        "caption style": '<br/><small><i>{caption}</i></small><br/>',
-    }
-
-    def on_model(self, idx: int, uid: str, model: object):
-        """Return html representation of given model"""
-
-        def att_to_label(att: object) -> str:
-            if self.options.columns == 'choice':
-                return self.get_choicename_of(att)
-            else:  # get the corresponding element of the columns list of items
-                return self.options.columns[atts.index(att) % len(self.options.columns)]
-
-        def obj_to_label(obj: object) -> str:
-            if self.options.rows == 'user':
-                return self.get_username_of(obj)
-            else:  # get the corresponding element of the rows list of items
-                return self.options.rows[objs.index(obj) % len(self.options.rows)]
-
-        objs, atts, rels = fields_from_source(model.atoms, self.options.source)
-        html = [' <tr>\n  <td></td>\n' + ''.join(f'   <th>{att_to_label(att)}</th>\n' for att in atts) + ' </tr>\n']
-        for obj in objs:
-            html.append(f' <tr>\n  <td>{obj_to_label(obj)}</td>' + ''.join(f'   <td>{"×" if att in rels[obj] else ""}</td>\n' for att in atts) + ' </tr>\n')
-        caption = self.options.caption_style.format(caption=self.options.caption) if self.options.caption else ''
-        return '<table>' + ''.join(html) + '</table>' + caption
-
-
-    def on_header(self):
-        pass
-
-    def on_footer(self):
-        pass
