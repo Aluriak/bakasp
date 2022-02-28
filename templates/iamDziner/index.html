@@ -7,28 +7,9 @@
 {{description}}
 
 <br/>
-{% if 'user' in public_pages %}
-    <a href='/user' title="Tell who you are, then tell your preferences">Give your preferences!</a>
-{% endif %}
-<br/>
-{% if 'overview' in public_pages %}
-    <a href='/overview' title="Overview of user's answers">Overview</a>
-{% endif %}
-<br/>
-{% if 'history' in public_pages %}
-    <a href='/history' title="History of compilations effects on models">History</a>
-{% endif %}
-<br/>
-{% if 'results' in public_pages %}
-    <a href='/results' title="See the results !">Results</a>
-{% endif %}
-<br/>
-<br/>
-{% if 'compilation' in public_pages %}
-    <a href='/compilation' title="Run compilation of the result if necessary">Compile</a>
-{% endif %}
-{% if 'configuration' in public_pages %}
-<a href='/configuration' title="Access to the configuration">Configuration</a><small>(<a href='/configuration/raw' title="Access to the RAW configuration">raw</a>)</small>
+
+{% if 'create_instance' in public_pages %}
+    <a href='/create' title="Instance creation">Create a Bakasp !</a>
 {% endif %}
 
 {% endblock %}

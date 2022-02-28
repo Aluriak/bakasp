@@ -88,7 +88,7 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
 
     # derivate values
     if data["global options"]["generated pages"] == 'all':
-        data["global options"]["generated pages"] = ["user", "results", "overview", "history", "compilation", "configuration", 'reset']
+        data["global options"]["generated pages"] = ["user", "results", "overview", "history", "compilation", "configuration/raw", "configuration", 'reset']
     if data["global options"]["public pages"] is None:
         data["global options"]["public pages"] = data["global options"]["generated pages"]
     if data["choices options"]["default"] == 'all':

@@ -1,9 +1,9 @@
 run:
-	python poc.py examples/choose-your-character.json
+	python bakasp_frontend.py examples/choose-your-character.json
 run-making-teams:
-	python poc.py examples/make-teams.json
+	python bakasp_frontend.py examples/make-teams.json
 run-failing-config:
-	python poc.py examples/bad-config.json
+	python bakasp_frontend.py examples/bad-config.json
 
 
 t: test

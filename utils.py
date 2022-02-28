@@ -2,20 +2,21 @@
 import re
 import random
 import clyngor
-from flask import Flask, request, redirect, url_for, render_template, Markup
+from flask import Flask, Blueprint
 from itertools import zip_longest
 
 
-def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this website to behave normally. Logs are necessary for further debug.'):
-    app = Flask(__name__)
+def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this website to behave normally. Logs are necessary for further debug.', blueprint: bool = False):
+    app = Blueprint('bakasp-sorry-instance', 'bakasp-sorry-instance') if blueprint else Flask('bakasp-sorry-instance')
     @app.route('/')
     def main_page():
         return msg
     return app
 
 
-def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this website to behave normally. Logs are necessary for further debug.', errors: list = []):
-    app = Flask(__name__)
+def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this website to behave normally. Logs are necessary for further debug.',
+                         errors: list = [], blueprint: bool = False) -> Flask:
+    app = Blueprint('bakasp-error-instance', 'bakasp-error-instance') if blueprint else Flask('bakasp-error-instance')
     @app.route('/')
     def main_page():
         return f"{msg}<br/><ul>\n" + ''.join(f'<li>{err}</li>\n' for err in errors) + '</ul>'
