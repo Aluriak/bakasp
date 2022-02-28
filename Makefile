@@ -5,7 +5,14 @@ run-making-teams:
 run-failing-config:
 	python bakasp_frontend.py examples/bad-config.json
 
+aas:
+	python aas.py
+
 
 t: test
 test:
 	python -m pytest -vv --doctest-modules *.py plugins
+
+
+clean:
+	- rm states/*
