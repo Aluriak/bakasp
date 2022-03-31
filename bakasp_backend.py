@@ -219,34 +219,82 @@ class Backend:
         self.users_who_changed_their_choices.add(username)
         return redirect('/thanks')
 
-    def html_config(self):
-        return self.cfg
-    def html_raw_config(self):
-        return self.raw_cfg
+    def html_config(self, *, admin: str = None):
+        if self.accepts('compilation', admin):
+            return self.cfg
+        else:
+            return render_template('admin-access-required.html')
+    def html_raw_config(self, *, admin: str = None):
+        if self.accepts('compilation', admin):
+            return self.raw_cfg
+        else:
+            return render_template('admin-access-required.html')
 
-    def html_compilation(self):
-        runtime = self.compile_models(force_compilation=True)
-        return f"done in {runtime}s"
+    def html_compilation(self, *, admin: str = None):
+        if self.accepts('compilation', admin):
+            runtime = self.compile_models(force_compilation=True)
+            return f"done in {runtime}s"
+        else:
+            return render_template('admin-access-required.html')
 
-    def html_history(self):
-        return render_template('history.html', history=reversed(self.history), no_history=not self.history)
+    def html_history(self, *, admin: str = None):
+        if self.accepts('history', admin):
+            return render_template('history.html', history=reversed(self.history), no_history=not self.history)
+        else:
+            return render_template('admin-access-required.html')
 
-    def html_overview(self):
-        return repr(self.user_choices) + '<br/>' + repr(self.cfg["users options"]["allowed"]) + '<br/>' + repr(self.cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding(self.cfg, self.user_choices) + '</code><br/>' + repr(self.history)
+    def html_overview(self, *, admin: str = None):
+        if self.accepts('overview', admin):
+            return repr(self.user_choices) + '<br/>' + repr(self.cfg["users options"]["allowed"]) + '<br/>' + repr(self.cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding(self.cfg, self.user_choices) + '</code><br/>' + repr(self.history)
+        else:
+            return render_template('admin-access-required.html')
 
-    def html_results(self):
-        if self.cfg["global options"]["compilation"] == 'direct access':
-            self.compile_models()
-        return render_template('results.html', models=self.models, header=self.result_header, footer=self.result_footer,
-                               message=self.cfg["output options"]["insatisfiability message"] if not self.models else "")
+    def html_results(self, *, admin: str = None):
+        if self.accepts('results', admin):
+            if self.cfg["global options"]["compilation"] == 'direct access':
+                self.compile_models()
+            return render_template('results.html', models=self.models, header=self.result_header, footer=self.result_footer,
+                                   message=self.cfg["output options"]["insatisfiability message"] if not self.models else "")
+        else:
+            return render_template('admin-access-required.html')
 
-    def html_reset(self):
-        self.init_user_choices()
-        self.save_state()
-        self.load_state()
-        return 'done.'
+    def html_admin_access_required(self):
+        return render_template('admin-access-required.html')
+
+    def html_reset(self, *, admin: str = None):
+        if self.accepts('reset', admin):
+            self.init_user_choices()
+            self.save_state()
+            self.load_state()
+            return 'done.'
+        else:
+            return render_template('admin-access-required.html')
 
     def html_thank_you_page(self):
         self.save_state()
         return render_template('thanks.html', username='dear user')
 
+    def accepts(self, page: str, admin_code: str) -> bool:
+        return page in cfg["global options"]["public pages"] or admin_code == self.admin_uid
+
+
+    def link_to_flask_app(self, app, root: str = '/'):
+        app.route(root)(self.html_instance_page)
+        app.route(root+'thanks')(self.html_thank_you_page)
+
+        app.route(root+'user')(self.html_user_list_page)
+
+        @app.route(root+'user/<userid>', methods=['GET', 'POST'])
+        def page_user_choice(userid):
+            if request.method == 'POST':
+                return self.set_user_choice(userid, request.form)
+            else:
+                return self.html_user_choice_page(userid)
+
+        app.route(root+'configuration')(self.html_config)
+        app.route(root+'configuration/raw')(self.html_raw_config)
+        app.route(root+'compilation')(self.html_compilation)
+        app.route(root+'history')(self.html_history)
+        app.route(root+'overview')(self.html_overview)
+        app.route(root+'results')(self.html_results)
+        app.route(root+'reset')(self.html_reset)
