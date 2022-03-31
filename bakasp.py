@@ -28,10 +28,10 @@ def create_website(cfg: dict, raw_cfg: dict, *, admin: str = None):
     return app
 
 
-def create_app(jsonfile: str, blueprint:bool = False) -> Flask or None:
+def create_app(jsonfile: str, *, blueprint:bool = False, admin: str = None) -> Flask or None:
     cfg, raw_cfg = parse_configuration_file(jsonfile)
     if cfg:
-        return create_website(cfg, raw_cfg)
+        return create_website(cfg, raw_cfg, admin=admin)
     else:
         return utils.create_errorlist_app(errors=raw_cfg, blueprint=blueprint)
 

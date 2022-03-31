@@ -45,9 +45,9 @@ class Backend:
 
     def __init__(self, uid: str, admin_uid: str, cfg: dict, raw_cfg: dict):
         """Expect the configuration to be valid"""
-        self.uid, self.admin_uid = uid, admin_uid
+        self.uid, self.admin_uid = (uid or ''), (admin_uid or '')
         self.template_folder = os.path.join('templates/', cfg['global options']['template'])
-        self.users_who_changed_their_choices = set()
+        self.users_who_changed_their_choices = set(None)
         self.stats = {}  # some stats about global state
         self.models = []  # list of all found models
         self.result_header, self.result_footer = '', ''  # header and footer of the result page
@@ -171,12 +171,13 @@ class Backend:
             self.users_who_changed_their_choices = set()
 
 
-    def html_instance_page(self):
+    def html_instance_page(self, *, admin: str = None):
         return render_template(
             'instance-index.html',
             title=self.cfg["main page options"]["title"],
             description=self.cfg["main page options"]["description"],
-            public_pages=self.cfg["global options"]["public pages"]
+            public_pages=self.cfg["global options"]["public pages"],
+            admin_code=('/admin/'+admin) if self.ok_admin(admin) else '',
         )
 
     def html_user_list_page(self):
@@ -275,11 +276,15 @@ class Backend:
         return render_template('thanks.html', username='dear user')
 
     def accepts(self, page: str, admin_code: str) -> bool:
-        return page in self.cfg["global options"]["public pages"] or admin_code == self.admin_uid
+        return page in self.cfg["global options"]["public pages"] or self.ok_admin(admin_code)
+
+    def ok_admin(self, admin_code: str) -> bool:
+        return admin_code and admin_code == self.admin_uid
 
 
     def link_to_flask_app(self, app, root: str = '/'):
         app.route(root)(self.html_instance_page)
+        app.route(root+'/admin/<admin>')(self.html_instance_page)
         app.route(root+'thanks')(self.html_thank_you_page)
 
         app.route(root+'user')(self.html_user_list_page)
@@ -292,9 +297,16 @@ class Backend:
                 return self.html_user_choice_page(userid)
 
         app.route(root+'configuration')(self.html_config)
+        app.route(root+'configuration/admin/<admin>')(self.html_config)
         app.route(root+'configuration/raw')(self.html_raw_config)
+        app.route(root+'configuration/raw/admin/<admin>')(self.html_config)
         app.route(root+'compilation')(self.html_compilation)
+        app.route(root+'compilation/admin/<admin>')(self.html_compilation)
         app.route(root+'history')(self.html_history)
+        app.route(root+'history/admin/<admin>')(self.html_history)
         app.route(root+'overview')(self.html_overview)
+        app.route(root+'overview/admin/<admin>')(self.html_overview)
         app.route(root+'results')(self.html_results)
+        app.route(root+'results/admin/<admin>')(self.html_results)
         app.route(root+'reset')(self.html_reset)
+        app.route(root+'reset/admin/<admin>')(self.html_reset)
