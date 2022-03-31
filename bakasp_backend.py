@@ -12,6 +12,15 @@ from asp_model import ShowableModel
 from asp import solve_encoding, compute_encoding
 
 
+# Link between user choice range and the HTML template that the front must expose
+RANGES_TO_TEMPLATES = {  # those who have the same name don't have to be specified, it will be mapped to 'range'
+    (1, 1): 'single',
+    (0, None): 'multiple',
+    (None, None): 'multiple',
+}
+CHOICES_TO_TEMPLATES = {
+    'multiple users': 'multiple',
+}
 
 def get_empty_state():
     return [{}, [], [], set()]
@@ -51,21 +60,25 @@ class Backend:
         self.load_state()
 
         # initialize user choices  (userid -> choices)
-        if cfg['users options']['type'] == 'restricted':
-            users = cfg["users options"]["allowed"]
-            self.user_choices = {u: cfg["choices options"]["default"] for u in users.values()}
-        else:
-            self.user_choices = {}
+        self.init_user_choices()
 
         # Get the renderer of models, headers and footers from the plugins system and accordingly to the configuration.
         self.model_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model repr'], self.get_username_of, self.get_choicename_of))
         self.header_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['header repr'], self.get_username_of, self.get_choicename_of))
         self.footer_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['footer repr'], self.get_username_of, self.get_choicename_of))
 
+
+    def init_user_choices(self):
+        if self.cfg['users options']['type'] == 'restricted':
+            users = self.cfg["users options"]["allowed"]
+            self.user_choices = {u: self.cfg["choices options"]["default"] for u in users.values()}
+        else:
+            self.user_choices = {}
+
     def save_state(self):
         if self.cfg['meta']['save state']:
             with open(self.filestate, 'w') as fd:
-                json.dump([user_choices, list(previous_models_uid), history], fd)
+                json.dump([self.user_choices, list(self.previous_models_uid), self.history], fd)
 
 
     @property
@@ -167,28 +180,41 @@ class Backend:
         )
 
     def html_user_list_page(self):
-        userid = self.users.get(username, username)
-        users = cfg["users options"]["allowed"]
-        if cfg["users options"]["type"] == 'restricted':
+        users = self.cfg["users options"]["allowed"]
+        if self.cfg["users options"]["type"] == 'restricted':
             elements = tuple(users.items() if isinstance(users, dict) else zip(users, users))
             return render_template("user.html", elements=elements, user_choice_text=self.cfg['users options']['description'])
         else:
             raise NotImplementedError("Sorry.")
 
     def html_user_choice_page(self, userid):
-        username = get_username_of(userid) or "Unknown"
+        username = self.get_username_of(userid) or "Unknown"
         choices = ((idx, cid, cval, cval in self.user_choices[userid])
                    for idx, (cid, cval) in enumerate(self.cfg['choices options']['choices'].items()))
+        choicetype_repr = self.cfg['choices options']['type repr']
+        choice_range = self.cfg['choices options']['type']
+        is_range = choice_range != choicetype_repr
+        if is_range and choice_range not in RANGES_TO_TEMPLATES:
+            print(f"WARNING: {choice_range=} is not in {RANGES_TO_TEMPLATES=}")
+        elif not is_range and choicetype_repr not in CHOICES_TO_TEMPLATES:
+            print(f"WARNING: {choicetype_repr=} is not in {CHOICES_TO_TEMPLATES=}")
+        if is_range:
+            fname = f"user-choice-{RANGES_TO_TEMPLATES.get(choice_range, choice_range)}.html"
+        else:
+            fname = f"user-choice-{CHOICES_TO_TEMPLATES.get(choicetype_repr, choicetype_repr)}.html"
+        if not os.path.exists(os.path.join(self.template_folder, fname)):
+            fname = f"user-choice-not-implemented.html"
+        print(f"{self.cfg['choices options']['type']=}")
         return render_template(
-            'user-choice.html', username=username, userid=userid,
+            fname, username=username, userid=userid,
             preference_choice_text=self.cfg['choices options']['description'],
-            choicetype=utils.range_as_js(cfg['choices options']['type']),
-            choicetype_repr=self.cfg['choices options']['type repr'],
+            choicetype=utils.range_as_js(self.cfg['choices options']['type']) if is_range else None,
+            choicetype_repr=choicetype_repr,
             choices=choices
         )
 
     def set_user_choice(self, userid, form):
-        username = get_username_of(userid) or "Unknown"
+        username = self.get_username_of(userid) or "Unknown"
         self.user_choices[userid] = list(self.user_choice_repr_from_request_form(form))  # keep list, because we need json serializable data
         self.users_who_changed_their_choices.add(username)
         return redirect('/thanks')
