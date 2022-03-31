@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block content %}
+{{description}}
+
+<br/>
+
+ <form id="form-creation", method=POST>
+	<label for="config">Title:</label>
+    <input type="text" id="config" name="Config" placeholder="{{default_config}}"><br/><br/>
+	{% for period, default in periods %}
+		<label for="{{period}}">{{period}}</label>
+		<input type="radio" value="{{period}}" name="period" checked={{'true' if default else 'false'}}>
+	{% endfor %}
+    <br/> <br/> <br/>
+	{% for impl, default in implementations %}
+		<label for="{{impl}}">{{impl}}</label>
+        <input type="radio" value="{{impl}}" name="implementation" checked={{'true' if default else 'false'}}><br/>
+	{% endfor %}
+  <br/><br/><br/><input type="submit" value="Submit">
+</form>
+
+
+{% endblock %}

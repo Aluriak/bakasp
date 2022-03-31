@@ -27,8 +27,9 @@ def get_empty_state():
 
 
 class ErrorBackend:
-    def __init__(self, uid: str, admin_uid: str, _: None, errors: list):
+    def __init__(self, uid: str, admin_uid: str, errors: list, raw_config: dict):
         self.uid, self.admin_uid = uid, admin_uid
+        self.cfg = self.raw_cfg = dict(raw_config)
         self.errors = tuple(errors)
 
     def html_error_page(self):
@@ -310,3 +311,4 @@ class Backend:
         app.route(root+'results/admin/<admin>')(self.html_results)
         app.route(root+'reset')(self.html_reset)
         app.route(root+'reset/admin/<admin>')(self.html_reset)
+

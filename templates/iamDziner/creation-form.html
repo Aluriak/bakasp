@@ -6,18 +6,9 @@
 {{description}}
 
 <br/>
-
- <form id="form-creation", method=POST>
-	<label for="title">Configuration:</label>
-    <input type="text" id="title" name="Title" placeholder="{{default_title}}"><br/><br/>
-	<label for="config">Title:</label>
-    <input type="text" id="config" name="Config" placeholder="{{default_config}}"><br/><br/>
-	{% for period, default in periods %}
-		<label for="{{period}}">{{period}}</label>
-		<input type="radio" value="{{period}}" name="period" checked={{'true' if default else 'false'}}>
+	{% for path, desc in methods %}
+        <input type='button' value="{{desc}}" class="btn" onclick="document.location.href='{{path}}';"/>
 	{% endfor %}
-  <br/><br/><br/><input type="submit" value="Submit">
-</form>
 
 
 {% endblock %}

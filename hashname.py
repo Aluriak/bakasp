@@ -58,7 +58,6 @@ def as_adj(nb: str) -> str:
 def get_random_hash() -> str:
     return from_obj(str(uuid.uuid4()))
 
-
 def from_obj(obj: object, nb_chunks: int = 2, **kwargs) -> str:
     h = hashlib.blake2b(digest_size=nb_chunks*WORD_SIZE, usedforsecurity=False)
     h.update(as_bytes(as_json_object(obj)))
