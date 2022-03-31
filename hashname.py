@@ -11,6 +11,7 @@ and updated with other words i found relevant.
 """
 
 
+import uuid
 import json
 import hashlib
 from utils import by_chunks
@@ -53,6 +54,9 @@ def as_adj(nb: str) -> str:
     return ADJECTIVES[int(''.join(nb)) % len(ADJECTIVES)]
 
 
+
+def get_random_hash() -> str:
+    return from_obj(str(uuid.uuid4()))
 
 
 def from_obj(obj: object, nb_chunks: int = 2, **kwargs) -> str:
