@@ -5,6 +5,8 @@ import clyngor
 from flask import Flask, Blueprint
 from itertools import zip_longest
 
+clyngor.use_clingo_binary()
+
 
 def create_sorry_app(msg: str = 'Sorry, a configuration problem prevent this website to behave normally. Logs are necessary for further debug.', blueprint: bool = False):
     app = Blueprint('bakasp-sorry-instance', 'bakasp-sorry-instance') if blueprint else Flask('bakasp-sorry-instance')
