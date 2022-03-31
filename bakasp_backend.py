@@ -275,7 +275,7 @@ class Backend:
         return render_template('thanks.html', username='dear user')
 
     def accepts(self, page: str, admin_code: str) -> bool:
-        return page in cfg["global options"]["public pages"] or admin_code == self.admin_uid
+        return page in self.cfg["global options"]["public pages"] or admin_code == self.admin_uid
 
 
     def link_to_flask_app(self, app, root: str = '/'):
