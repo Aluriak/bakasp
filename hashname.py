@@ -81,74 +81,9 @@ def __from_hash(h: str, nb_chunks: int, joiner: str=' ', style=str.title) -> str
 
 
 
-def run_collision_test():
-    import os
-    import json
-    import random
-    from pprint import pprint
-    from itertools import islice
-    from collections import Counter, defaultdict
-    new_obj = lambda: tuple(random.randint(1, 1000) for _ in range(random.randint(1, 10)))
-    def all_hashes():
-        for n in NOUNS:
-            for a in ADJECTIVES:
-                yield a + ' ' + n
-    # collisions = {f'{a} {n}': 0 for n in NOUNS for a in ADJECTIVES}
-    collisions = defaultdict(int)
-    total = 0
-    # existing = set()
-    NB_HITS = 100000
-    for _ in range(0, NB_HITS):
-        new = from_obj(new_obj())
-        if new in collisions:
-            total += 1
-        collisions[new] += 1
-        # existing.add(new)
-        print(f'\r{_} {total} / {len(collisions)}  ', end='', flush=True)
-    print()
-    NB_HASHES = len(NOUNS) * len(ADJECTIVES)
-    HASHES = set(all_hashes())
-    missing_hashes = HASHES - set({k for k, v in collisions.items() if v > 0})
-    # collisions = {k: v for k, v in collisions.items() if v > 1}
-    # pprint({k: v for k, v in collisions.items() if v > 1})
-    print('NB != HASHES:', NB_HASHES)
-    print('NB != COKEYS:', len(collisions))
-    print('unseen hashs:', len(missing_hashes))
-    print('  ->includes:', ', '.join(list(missing_hashes)[:10]))
-    print('  ->includes:', ', '.join(sorted(missing_hashes)[:10]))
-
-    print('         hits:', NB_HITS)
-    print('  #collisions:', sum(collisions.values()))
-    print('expected mean:', round(NB_HITS / NB_HASHES, 3))
-    print('         mean:', round(sum(collisions.values()) / len(collisions), 3))
-    print('          min:', min(collisions.values()))
-    print('          max:', max(collisions.values()))
-
-    if os.path.exists('data/unseens.json'):
-        print('data/unseens.json loaded with previously missing hashes')
-        with open('data/unseens.json') as fd:
-            previous = set(json.load(fd))
-        both = len(previous | missing_hashes)
-        print('#prev:', len(previous))
-        print('#miss:', len(missing_hashes))
-        print('miss - prev:', len(missing_hashes - previous), f'({round(100*len(missing_hashes - previous) / both, 1)}%)')
-        print('prev - miss:', len(previous - missing_hashes), f'({round(100*len(previous - missing_hashes) / both, 1)}%)')
-        print('prev | miss:', len(previous | missing_hashes), f'({round(100*len(previous | missing_hashes) / both, 1)}%)')
-        print('prev & miss:', len(previous & missing_hashes), f'({round(100*len(previous & missing_hashes) / both, 1)}%)')
-        with open('data/unseens.json', 'w') as fd:
-            fd.write(json.dumps(sorted(previous - missing_hashes)))
-    else:
-        with open('data/unseens.json', 'w') as fd:
-            fd.write(json.dumps(sorted(missing_hashes)))
-    print('data/unseens.json created with missing hashes')
-
-    # NB: after running that routine around twenty times, i got 11 remaining unseen hashes:
-    # Bloody Buffoon, Broken Hawk, Cool Gears, Cool Warrior, Fluffy Base, Fluffy Fog, Fluffy Winter, Godless Cavern, Godless Rose, Patient Misery, Tiny Dog
 
 if __name__ == "__main__":
 
     import random
-    new_obj = lambda: tuple(random.randint(1, 1000) for _ in range(random.randint(1, 10)))
-    mean_of = lambda t: round(sum(t) / len(t), 3)
     # for _ in range(10):
     run_collision_test()
