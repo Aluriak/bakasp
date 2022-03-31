@@ -1,34 +1,42 @@
 
 {% extends 'base.html' %}
 
-{% block title %}{{title}}{% endblock %}
+
+{% block title %}
+    {% if admin_code %}
+        ADMIN PAGE OF<br/>
+    {% endif %}
+    {{title}}
+{% endblock %}
 
 {% block content %}
+{% if admin_code %}
+    <b>ADMIN PAGE</b><br/>
+{% endif %}
+
 {{description}}
 
 <br/>
-{% if 'user' in public_pages %}
-    <a href='/user' title="Tell who you are, then tell your preferences">Give your preferences!</a>
+<a href='/user' title="Tell who you are, then tell your preferences">Give your preferences!</a>
+<br/>
+{% if admin_code or 'overview' in public_pages %}
+    <a href='/overview{{admin_code}}' title="Overview of user's answers">Overview</a>
 {% endif %}
 <br/>
-{% if 'overview' in public_pages %}
-    <a href='/overview' title="Overview of user's answers">Overview</a>
+{% if admin_code or 'history' in public_pages %}
+    <a href='/history{{admin_code}}' title="History of compilations effects on models">History</a>
 {% endif %}
 <br/>
-{% if 'history' in public_pages %}
-    <a href='/history' title="History of compilations effects on models">History</a>
-{% endif %}
-<br/>
-{% if 'results' in public_pages %}
-    <a href='/results' title="See the results !">Results</a>
+{% if admin_code or 'results' in public_pages %}
+    <a href='/results{{admin_code}}' title="See the results !">Results</a>
 {% endif %}
 <br/>
 <br/>
-{% if 'compilation' in public_pages %}
-    <a href='/compilation' title="Run compilation of the result if necessary">Compile</a>
+{% if admin_code or 'compilation' in public_pages %}
+    <a href='/compilation{{admin_code}}' title="Run compilation of the result if necessary">Compile</a>
 {% endif %}
-{% if 'configuration' in public_pages %}
-<a href='/configuration' title="Access to the configuration">Configuration</a><small>(<a href='/configuration/raw' title="Access to the RAW configuration">raw</a>)</small>
+{% if admin_code or 'configuration' in public_pages %}
+<a href='/configuration{{admin_code}}' title="Access to the configuration">Configuration</a><small>(<a href='/configuration/raw' title="Access to the RAW configuration">raw</a>)</small>
 {% endif %}
 
 
