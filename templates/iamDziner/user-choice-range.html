@@ -1,0 +1,32 @@
+
+{% extends 'user-choice.html' %}
+{% block form_content %}
+    <script type="text/javascript">
+        function nbchkctrl(cid) {
+            var count = 0;
+            for(var i = 0; i < document.choiceform.choice.length; i++){
+                if(document.choiceform.choice[i].checked){
+                    count++;
+            }}if (count > {{choicetype[1]}}){
+                // document.choiceform.choice[cid].checked = false ;
+                document.getElementById("submitbutton").value = "Please select {{choicetype_repr}} elements";
+                document.getElementById("submitbutton").disabled = true;
+            }else if (count < {{choicetype[0]}}){
+                // document.choiceform.choice[cid].checked = true ;
+                document.getElementById("submitbutton").value = "Please select {{choicetype_repr}} elements";
+                document.getElementById("submitbutton").disabled = true;
+            }else{
+                document.getElementById("submitbutton").value = "Set my preferences";
+                document.getElementById("submitbutton").disabled = false;
+            }
+        }
+    </script>
+    <div style="display: inline-block">  <!-- keep justification (centering, probably), but allow content to have its own justification -->
+    <ul style="text-align: left; list-style-type:none">  <!-- justify left, no bullets-->
+    {% for idx, choice, choiceid, was_chosen in choices %}
+        <li><input type="checkbox" name="choice" value="{{choiceid}}" onclick="nbchkctrl({{idx}})" {{' checked' if was_chosen else ''}}/> {{choice}} </li>
+    {% endfor %}
+    </ul>
+    </div>
+    <script>nbchkctrl(0)</script>
+{% endblock %}
