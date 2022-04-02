@@ -351,7 +351,7 @@ String going just under the title, and before all technical links.
     - [ ] choose your character, a one-to-one pairing with ranked preferences.
     - [ ] choose your character among many, a maybe-to-one pairing with ranked preferences, and group optimization based on roles.
     - [ ] restaurant choice based on ranks  (majority judgment demo)
-- [ ] multiservice: enable one app to run many configurations.
+- [x] Bakasp As A Service: enable one app to run many configurations, enable to create ones, etc.
 
 ### Needs a good amount of work
 - [ ] multiple choices scheme: users may have to prodive multiple informations for a single service to behave correctly. This needs a complete rethink of how to handle forms and output atoms.
