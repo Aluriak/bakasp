@@ -1,6 +1,12 @@
 """Bakasp «As A Service»: like framapad.org
 
+usage:
+
+    python aas.py <path to config file>
+
 """
+import os
+import sys
 import json
 import uuid
 import time
@@ -11,33 +17,34 @@ from collections import namedtuple, Counter
 from flask import Flask, render_template, redirect, request, url_for
 
 import config as config_module
+import hashname
+import aas_config as aasconfig_module
+from aas_config import TIMES, AVAILABLE_CHOICE_TYPES, AVAILABLE_IMPLEMENTATIONS
 import bakasp_backend
 from bakasp_backend import Backend
 
+
 InstanceControl = namedtuple('InstanceControl', 'backend, datetimelimit, period_label, haserror')
-SECONDS_PER_DAY = 3600 * 24
-TIMES = {
-    'daily': 1*SECONDS_PER_DAY,
-    'weekly': 7*SECONDS_PER_DAY,
-    'monthly': 30*SECONDS_PER_DAY,
-}
-AVAILABLE_IMPLEMENTATIONS = {
-    'One-to-One Association': 'data/asp/one-to-one-assoc.lp',
-    'Team Maker': 'data/asp/making-teams.lp',
-}
-AVAILABLE_CHOICE_TYPES = {  # choice uids
-    'at least 1',
-    'at most 1',
-    'exactly 1',
-}
 
 
-def create_from_config(input_config: dict, period: str, uids: set) -> (str, InstanceControl, str):
+def gen_uid(cfg: dict, admin_password: bool = False) -> callable:
+    mtd = cfg['admin options']['password format'] if admin_password else cfg['server options']['uid format']
+    if mtd == 'short':
+        return ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in range(8))
+    elif mtd == 'long':
+        return str(uuid.uuid4())
+    elif mtd == 'memorable':
+        return hashname.get_random_hash().replace(' ', '-').replace("'", '').lower()
+    else:
+        raise NotImplementedError(f"UID generation method {uid_gen_method} is not valid.")
+
+
+def create_from_config(aas_config: dict, input_config: dict, period: str, uids: set) -> (str, InstanceControl, str):
     """Create the backend, return its uid, its instance, the InstanceControl instance, and the page to which the user must be redirected"""
     config, raw_config = validate_config(input_config)
     uid = None
     while uid is None or uid in uids:
-        uid, admin_uid = str(uuid.uuid4()), str(uuid.uuid4())
+        uid, admin_uid = gen_uid(aas_config), gen_uid(aas_config, admin_password=True)
 
     if config is None:
         uid = admin_uid
@@ -54,7 +61,7 @@ def create_from_config(input_config: dict, period: str, uids: set) -> (str, Inst
     return uid, ic, target
 
 
-def create_from_form(title: str, period: str, uids: set, asp_file: str, userline: str, choicetype: str, choiceline: str) -> (str, InstanceControl, str):
+def create_from_form(aas_config: dict, title: str, period: str, uids: set, asp_file: str, userline: str, choicetype: str, choiceline: str) -> (str, InstanceControl, str):
     line_to_list = lambda line: [u.title() for u in map(str.strip, line.split(',')) if u]
     config = {
         'global options': {
@@ -71,7 +78,7 @@ def create_from_form(title: str, period: str, uids: set, asp_file: str, userline
             'choices': line_to_list(choiceline),
         },
     }
-    return create_from_config(config, period, uids)
+    return create_from_config(aas_config, config, period, uids)
 
 
 def validate_config(config_text: str) -> (dict or None, list[str]):
@@ -88,9 +95,11 @@ def validate_config(config_text: str) -> (dict or None, list[str]):
     return config_module.parse_configuration(config, filesource='browser', verify=True)
 
 
-def create_app():
+def create_app(configpath: str):
+    aascfg, _ = aasconfig_module.parse_config_file(configpath)
     bakasp_instances = {}  # uuid -> InstanceControl
-    app = Flask(__name__, template_folder='templates/iamDziner/')
+    app = Flask(__name__, template_folder=os.path.join('templates/', aascfg['global options']['template']))
+
 
     @app.route('/create')
     def creation_of_new_instance():
@@ -100,7 +109,7 @@ def create_app():
     def creation_of_new_instance_by_config():
         if request.method == 'POST':
             uid, control, target = create_from_config(
-                request.form['Config'], request.form['period'], uids=bakasp_instances
+                aascfg, request.form['Config'], request.form['period'], uids=bakasp_instances, uid_creator=create_new_uid
             )
             assert uid not in bakasp_instances
             bakasp_instances[uid] = control
@@ -113,6 +122,7 @@ def create_app():
         if request.method == 'POST':
             choices = request.form['users'] if request.form['choose-set'] == 'choose-users' else request.form['choose-among-list']
             uid, control, target = create_from_form(
+                aascfg,
                 request.form['title'],
                 request.form['period'],
                 bakasp_instances,
@@ -229,5 +239,5 @@ def create_app():
     return app
 
 if __name__ == "__main__":
-    app = create_app()
+    app = create_app(sys.argv[1])
     app.run(port=8080, debug=True)

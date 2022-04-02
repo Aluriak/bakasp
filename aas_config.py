@@ -8,7 +8,25 @@ import itertools
 import utils
 import model_repr
 
-def parse_aas_config_file(json_file:str):
+
+SECONDS_PER_DAY = 3600 * 24
+TIMES = {
+    'daily': 1*SECONDS_PER_DAY,
+    'weekly': 7*SECONDS_PER_DAY,
+    'monthly': 30*SECONDS_PER_DAY,
+}
+AVAILABLE_IMPLEMENTATIONS = {
+    'One-to-One Association': 'data/asp/one-to-one-assoc.lp',
+    'Team Maker': 'data/asp/making-teams.lp',
+}
+AVAILABLE_CHOICE_TYPES = {  # choice uids
+    'at least 1',
+    'at most 1',
+    'exactly 1',
+}
+
+
+def parse_config_file(json_file:str):
     with open(json_file) as fd:
         data = json.load(fd)
     return parse_configuration(data, filesource=json_file)
@@ -30,9 +48,12 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         data.setdefault(key, {})
         data[key].setdefault(subkey, default_value)
 
+    set_default('admin options', 'password format', 'long')
     set_default('server options', 'max instances', 0)
+    set_default('server options', 'uid format', 'memorable')
     set_default('creation options', 'available times', 'all')
     set_default('creation options', 'available implementations', 'all')
+    set_default('global options', 'template', 'iamDziner')
 
     # derivate values
     if data["server options"]["max instances"] == -1:
@@ -46,9 +67,11 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     def str_to_list(key, subkey, splitter=' '):
         if isinstance(data[key][subkey], str):
             data[key][subkey] = data[key][subkey].split(splitter)
-        assert isinstance(data[key][subkey], list)
+        assert isinstance(data[key][subkey], (tuple, list))
     str_to_list("creation options", "available times")
     str_to_list("creation options", "available implementations")
+
+    return data, raw_data
 
 
 def errors_in_configuration(cfg: dict):
@@ -62,7 +85,8 @@ def errors_in_configuration(cfg: dict):
                 return False
             errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, set(ok_values)+set(other_valid_values)))}")
 
-    # ensure_in("users options", "type", {'restricted', 'valid-id', 'convertible'})
+    ensure_in("server options", "uid format", {'short', 'long', 'memorable'})
+    ensure_in("admin options", "password format", {'short', 'long', 'memorable'})
 
     # type checking
     def ensure_is(key, subkey, *types):
