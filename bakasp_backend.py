@@ -59,7 +59,10 @@ class Backend:
         self.cfg, self.raw_cfg = cfg, raw_cfg
 
         # initialize state
-        self.filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_') + '---' + self.uid)
+        if self.uid:
+            self.filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
+        else:
+            self.filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_')).replace('.json', '---' + self.uid + '.json')
         self.load_state()
 
         # initialize user choices  (userid -> choices)
