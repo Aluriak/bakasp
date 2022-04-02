@@ -8,19 +8,41 @@
 <br/>
 
  <form id="form-creation", method=POST>
-	<label for="config">Title:</label>
-    <input type="text" id="config" name="Config" placeholder="{{default_config}}"><br/><br/>
-	{% for period, default in periods %}
-		<label for="{{period}}">{{period}}</label>
-		<input type="radio" value="{{period}}" name="period" checked={{'true' if default else 'false'}}>
-	{% endfor %}
+
+
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" placeholder="{{title}}"><br/><br/>
+    {% for period, default in periods %}
+        <label for="{{period}}">{{period}}</label>
+        <input type="radio" value="{{period}}" name="period" checked={{'true' if default else 'false'}}>
+    {% endfor %}
     <br/> <br/> <br/>
-	{% for impl, default in implementations %}
-		<label for="{{impl}}">{{impl}}</label>
+
+
+    {% for impl, default in implementations %}
+        <label for="{{impl}}">{{impl}}</label>
         <input type="radio" value="{{impl}}" name="implementation" checked={{'true' if default else 'false'}}><br/>
-	{% endfor %}
+    {% endfor %}
+
+    <br/> <br/>
+    <label for="users">Users, separated by comma:</label>
+    <input type="text" id="users" name="users" placeholder="john,jane"><br/><br/>
+
+    <br/> <br/>
+    Choice type:<br/>
+    {% for label, default in choicetypes %}
+        <input type="radio" value="{{label}}" name="choicetype" checked={{'true' if default else 'false'}}>
+        <label for="{{label}}">{{label}}</label>
+    {% endfor %}
+    <br/>
+    Choose among:<br/>
+        <input type="radio" value="choose-users" name="choose-set" checked=false onclick='document.getElementById("choose-among-list").disabled = true;'>
+        <label for="choose-users">users</label>
+        <input type="radio" value="choose-among" name="choose-set" checked=true onclick='document.getElementById("choose-among-list").disabled = false;'>
+        <input for="choose-among" type="text" id="choose-among-list" name="choose-among-list" placeholder="A,B,C"><br/><br/>
+
+
   <br/><br/><br/><input type="submit" value="Submit">
 </form>
-
 
 {% endblock %}

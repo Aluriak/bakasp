@@ -1,0 +1,12 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Stats{% endblock %}
+
+{% block content %}
+
+{% for stat, value in stats.items() %}
+<b>{{stat}}:</b> {{value}} <br/>
+{% endfor %}
+
+{% endblock %}

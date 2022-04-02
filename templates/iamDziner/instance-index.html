@@ -17,26 +17,30 @@
 {{description}}
 
 <br/>
-<a href='/user' title="Tell who you are, then tell your preferences">Give your preferences!</a>
+<a href='{{root}}user' title="Tell who you are, then tell your preferences">Give your preferences!</a>
 <br/>
 {% if admin_code or 'overview' in public_pages %}
-    <a href='/overview{{admin_code}}' title="Overview of user's answers">Overview</a>
+    <a href='{{root}}overview{{admin_code}}' title="Overview of user's answers">Overview</a>
 {% endif %}
 <br/>
 {% if admin_code or 'history' in public_pages %}
-    <a href='/history{{admin_code}}' title="History of compilations effects on models">History</a>
+    <a href='{{root}}history{{admin_code}}' title="History of compilations effects on models">History</a>
 {% endif %}
 <br/>
 {% if admin_code or 'results' in public_pages %}
-    <a href='/results{{admin_code}}' title="See the results !">Results</a>
+    <a href='{{root}}results{{admin_code}}' title="See the results !">Results</a>
 {% endif %}
 <br/>
 <br/>
 {% if admin_code or 'compilation' in public_pages %}
-    <a href='/compilation{{admin_code}}' title="Run compilation of the result if necessary">Compile</a>
+    <a href='{{root}}compilation{{admin_code}}' title="Run compilation of the result if necessary">Compile</a>
 {% endif %}
 {% if admin_code or 'configuration' in public_pages %}
-<a href='/configuration{{admin_code}}' title="Access to the configuration">Configuration</a><small>(<a href='/configuration/raw' title="Access to the RAW configuration">raw</a>)</small>
+<a href='{{root}}configuration{{admin_code}}' title="Access to the configuration">Configuration</a><small>(<a href='{{root}}configuration/raw' title="Access to the RAW configuration">raw</a>)</small>
+{% endif %}
+
+{% if remaining_instance_time %}
+    This instance is to be deleted {{remaining_instance_time}}.
 {% endif %}
 
 

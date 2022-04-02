@@ -7,7 +7,7 @@
     {{user_choice_text}} <br/> <br/> <br/>
     {% if elements %}
         {% for username, userid in elements %}
-            <input type='button' value="{{username}}" class="btn" onclick="document.location.href='/user/{{userid}}';"/><br/><br/>
+            <input type='button' value="{{username}}" class="btn" onclick="document.location.href='{{root}}user/{{userid}}';"/><br/><br/>
         {% endfor%}
     {% else %}
         Unsupported username feature asked. Sorry. Ask the admin. That shouldn't happen.
