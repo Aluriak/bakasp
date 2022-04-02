@@ -1,5 +1,6 @@
 
 import re
+import time
 import random
 import clyngor
 from flask import Flask, Blueprint
@@ -78,6 +79,55 @@ def human_repr_of_runtime(runtime:float) -> str:
         return "1s"
     else:
         return f"{round(runtime, 5)}s"
+
+def human_repr_of_timestamp(ts: float) -> str:
+    """
+    >>> human_repr_of_timestamp(time.time() + 10)
+    'in 10s'
+    >>> human_repr_of_timestamp(time.time() + 30*60)
+    'in 30mn'
+    >>> human_repr_of_timestamp(time.time() - 30*60)
+    '30mn ago'
+    >>> human_repr_of_timestamp(time.time() - 58)
+    '1mn ago'
+    >>> human_repr_of_timestamp(time.time() - 59*60)
+    '1h ago'
+    """
+    diff = ts - time.time()
+    if diff < 0:  # in the past
+        prefix, suffix = '', ' ago'
+    elif abs(diff) < 1:  # around now
+        return 'now'
+    else:  # in the future
+        prefix, suffix = 'in ', ''
+    return prefix + human_repr_of_diffstamp(round(diff)) + suffix
+
+def human_repr_of_diffstamp(diff: int, *, subcall: bool = False) -> str:
+    diff = abs(diff)
+    if diff < 1:
+        return '' if subcall else 'now'
+
+    THRESHOLDS = {
+        0: '{n}s',
+        60: '{n}mn',
+        3600: '{n}h',
+        24*3600: '{n} day',
+        7*24*3600: '{n} week',
+        30*7*24*3600: '{n} month',
+        365*7*24*3600: '{n} year',
+        100*365*7*24*3600: '{n} century',
+    }
+    for real_time, template in reversed(THRESHOLDS.items()):
+        # print(diff, real_time, diff >= real_time*0.90)
+        if real_time == 0:
+            return template.format(n=diff)
+        elif diff >= real_time*0.90 and diff < real_time:  # almost !
+            return template.format(n=1)
+        elif diff >= real_time:
+            return template.format(n=int(diff // real_time))
+
+
+
 
 
 def range_from_human_repr(s: str, accept_impossible_range:bool = False) -> (int, int):
