@@ -4,7 +4,7 @@ import os
 import json
 import time
 from functools import lru_cache
-from flask import redirect, render_template, Markup
+from flask import redirect, render_template, Markup, request
 
 import utils
 import model_repr

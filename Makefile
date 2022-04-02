@@ -3,11 +3,11 @@ aas:
 	python aas.py
 
 run:
-	python bakasp_frontend.py examples/choose-your-character.json
+	python bakasp.py examples/choose-your-character.json
 run-making-teams:
-	python bakasp_frontend.py examples/make-teams.json
+	python bakasp.py examples/make-teams.json
 run-failing-config:
-	python bakasp_frontend.py examples/bad-config.json
+	python bakasp.py examples/bad-config.json
 
 
 t: test
