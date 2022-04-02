@@ -76,14 +76,14 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     if data["users options"]["type"] == 'restricted':
         if isinstance(data["users options"]["allowed"], str):
             data["users options"]["allowed"] = data["users options"]["allowed"].split(' ')
-        if isinstance(data["users options"]["allowed"], list):
+        if isinstance(data["users options"]["allowed"], (list, tuple, set, frozenset)):
             data["users options"]["allowed"] = {user: next(gen_uid) for user in data["users options"]["allowed"]}
     if data["choices options"]["type"] in {'multiple users', 'single user'}:
         data["choices options"]["choices"] = data["users options"]["allowed"]
         assert isinstance(data["users options"]["allowed"], dict)
     if isinstance(data["choices options"]["choices"], str):
         data["choices options"]["choices"] = data["choices options"]["choices"].split(' ')
-    if isinstance(data["choices options"]["choices"], list):
+    if isinstance(data["choices options"]["choices"], (list, tuple, set, frozenset)):
         data["choices options"]["choices"] = {choice: next(gen_uid) for choice in data["choices options"]["choices"]}
 
     # derivate values
@@ -194,7 +194,7 @@ def errors_in_configuration(cfg: dict):
 
     if isinstance(cfg["choices options"]['type'], tuple) and len(cfg["choices options"]['type']) == 2 and isinstance(cfg["choices options"]['type'][0], (int, type(None))) and isinstance(cfg["choices options"]['type'][1], (int, type(None))):
         pass
-    else:
+    else:  # if it's not a range, must be a string providing one
         ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'}, {'at least|most <N>', 'less|more than <N>', 'between <N> and <K>'})
 
 
