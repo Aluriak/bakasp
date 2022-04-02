@@ -29,6 +29,7 @@ def get_empty_state():
 class ErrorBackend:
     def __init__(self, uid: str, admin_uid: str, errors: list, raw_config: dict):
         self.uid, self.admin_uid = uid, admin_uid
+        assert isinstance(raw_config, dict), repr(raw_config)
         self.cfg = self.raw_cfg = dict(raw_config)
         self.errors = tuple(errors)
 
