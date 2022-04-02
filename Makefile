@@ -1,6 +1,6 @@
 
 aas:
-	python aas.py
+	python aas.py examples/empty.json
 
 run:
 	python bakasp.py examples/choose-your-character.json
