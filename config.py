@@ -183,9 +183,7 @@ def errors_in_configuration(cfg: dict):
     # domain checking
     def ensure_in(key, subkey, ok_values, other_valid_values=set()):
         if (val := cfg[key][subkey]) not in ok_values:
-            if just_false_on_error:
-                return False
-            errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, set(ok_values)+set(other_valid_values)))}")
+            errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, set(ok_values)|set(other_valid_values)))}")
 
     ensure_in("users options", "type", {'restricted', 'valid-id', 'convertible'})
     ensure_in("global options", "compilation", {'direct access', 'specific access'})
