@@ -12,8 +12,13 @@ run-failing-config:
 
 t: test
 test:
-	python -m pytest -vv --doctest-modules *.py plugins
+	- rm states/*test*
+	python -m pytest -vv --doctest-modules *.py test/ plugins
+	- rm states/*test*
 
 
 clean:
 	- rm states/*
+
+
+.PHONY: t test aas run
