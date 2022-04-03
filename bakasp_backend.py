@@ -45,7 +45,7 @@ class Backend:
     @property
     def haserror(self) -> bool: return False
 
-    def __init__(self, uid: str, admin_uid: str, cfg: dict, raw_cfg: dict, *, rootpath: str = '/'):
+    def __init__(self, uid: str, admin_uid: str, cfg: dict, raw_cfg: dict, *, rootpath: str = '/', render_template_func: callable = render_template):
         """Expect the configuration to be valid"""
         self.uid, self.admin_uid = (uid or ''), (admin_uid or '')
         self.root = rootpath.format(uid=self.uid)
@@ -57,6 +57,7 @@ class Backend:
         self.history = []  # (datetime, userids -> choices, new_models, lost_models)
         self.previous_models_uid = set()  # uids of found models before last compilation
         self.cfg, self.raw_cfg = cfg, raw_cfg
+        self.render_template = render_template_func
 
         # initialize state
         if self.uid:
@@ -84,7 +85,7 @@ class Backend:
     def save_state(self):
         if self.cfg['meta']['save state']:
             with open(self.filestate, 'w') as fd:
-                json.dump([self.user_choices, list(self.previous_models_uid), self.history], fd)
+                json.dump([self.user_choices, list(self.previous_models_uid), self.history, list(self.previous_models_uid)], fd)
 
 
     @property
@@ -178,7 +179,7 @@ class Backend:
 
 
     def html_instance_page(self, *, admin: str = None, remaining_instance_time: str = None):
-        return render_template(
+        return self.render_template(
             'instance-index.html',
             title=self.cfg["main page options"]["title"],
             description=self.cfg["main page options"]["description"],
@@ -192,7 +193,7 @@ class Backend:
         users = self.cfg["users options"]["allowed"]
         if self.cfg["users options"]["type"] == 'restricted':
             elements = tuple(users.items() if isinstance(users, dict) else zip(users, users))
-            return render_template("user.html", elements=elements, user_choice_text=self.cfg['users options']['description'], root=self.root)
+            return self.render_template("user.html", elements=elements, user_choice_text=self.cfg['users options']['description'], root=self.root)
         else:
             raise NotImplementedError("Sorry. For now, users must be explicitely named.")
 
@@ -214,7 +215,7 @@ class Backend:
         if not os.path.exists(os.path.join(self.template_folder, fname)):
             fname = f"user-choice-not-implemented.html"
         print(f"{self.cfg['choices options']['type']=}")
-        return render_template(
+        return self.render_template(
             fname, username=username, userid=userid,
             preference_choice_text=self.cfg['choices options']['description'],
             choicetype=utils.range_as_js(self.cfg['choices options']['type']) if is_range else None,
@@ -233,44 +234,44 @@ class Backend:
         if self.accepts('compilation', admin):
             return self.cfg
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
     def html_raw_config(self, *, admin: str = None):
         if self.accepts('compilation', admin):
             return self.raw_cfg
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_compilation(self, *, admin: str = None):
         if self.accepts('compilation', admin):
             runtime = self.compile_models(force_compilation=True)
             return f"done in {runtime}s"
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_history(self, *, admin: str = None):
         if self.accepts('history', admin):
-            return render_template('history.html', history=reversed(self.history), no_history=not self.history, root=self.root)
+            return self.render_template('history.html', history=reversed(self.history), no_history=not self.history, root=self.root)
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_overview(self, *, admin: str = None):
         if self.accepts('overview', admin):
             return repr(self.user_choices) + '<br/>' + repr(self.cfg["users options"]["allowed"]) + '<br/>' + repr(self.cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding(self.cfg, self.user_choices) + '</code><br/>' + repr(self.history)
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_results(self, *, admin: str = None):
         if self.accepts('results', admin):
             if self.cfg["global options"]["compilation"] == 'direct access':
                 self.compile_models()
-            return render_template('results.html', models=self.models, header=self.result_header, footer=self.result_footer,
+            return self.render_template('results.html', models=self.models, header=self.result_header, footer=self.result_footer,
                                    message=self.cfg["output options"]["insatisfiability message"] if not self.models else "",
                                    root=self.root)
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_admin_access_required(self):
-        return render_template('admin-access-required.html', root=self.root)
+        return self.render_template('admin-access-required.html', root=self.root)
 
     def html_reset(self, *, admin: str = None):
         if self.accepts('reset', admin):
@@ -279,11 +280,11 @@ class Backend:
             self.load_state()
             return 'done.'
         else:
-            return render_template('admin-access-required.html', root=self.root)
+            return self.render_template('admin-access-required.html', root=self.root)
 
     def html_thank_you_page(self):
         self.save_state()
-        return render_template('thanks.html', username='dear user', root=self.root)
+        return self.render_template('thanks.html', username='dear user', root=self.root)
 
     def accepts(self, page: str, admin_code: str) -> bool:
         return page in self.cfg["global options"]["public pages"] or self.ok_admin(admin_code)
