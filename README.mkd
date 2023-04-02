@@ -351,6 +351,7 @@ String going just under the title, and before all technical links.
     - [ ] choose your character, a one-to-one pairing with ranked preferences.
     - [ ] choose your character among many, a maybe-to-one pairing with ranked preferences, and group optimization based on roles.
     - [ ] restaurant choice based on ranks  (majority judgment demo)
+    - [ ] organize a tabletop game evening (game & dishes preferences)
 - [x] Bakasp As A Service: enable one app to run many configurations, enable to create ones, etc.
 
 ### Needs a good amount of work
