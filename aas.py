@@ -30,7 +30,7 @@ InstanceControl = namedtuple('InstanceControl', 'backend, datetimelimit, period_
 def gen_uid(cfg: dict, admin_password: bool = False) -> callable:
     mtd = cfg['admin options']['password format'] if admin_password else cfg['server options']['uid format']
     if mtd == 'short':
-        return ''.join(random.choice('abcdefghijklmnopqrstuvwxyz0123456789') for _ in range(8))
+        return str(uuid.uuid4())[:8]
     elif mtd == 'long':
         return str(uuid.uuid4())
     elif mtd == 'memorable':
