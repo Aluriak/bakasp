@@ -248,7 +248,7 @@ trying to show all capabilities of that option and the following example of vali
 
     # (note that header and footer are also configurable using the same constructions)
 
-The model representation is broken in three parts:
+This model representation is broken in three parts:
 - a title, that will show the solution index and its uid
 - a raw list of (all) atoms
 - a binary table in two dimensions, where rows are users, 2 columns `blue` and `red`, and relationships between rows and columns are given by `team/2` atoms, with the first arg being the column, and the second the row. Hence, `team(1,2)` will indicate that user `2` is associated to `blue` (considering the second team is numbered 2).
@@ -355,8 +355,8 @@ String going just under the title, and before all technical links.
 - [x] Bakasp As A Service: enable one app to run many configurations, enable to create ones, etc.
 
 ### Needs a good amount of work
-- [ ] multiple choices scheme: users may have to prodive multiple informations for a single service to behave correctly. This needs a complete rethink of how to handle forms and output atoms.
-    - [ ] a first approach: choice become in json config a __list__ of choices, asked one by one to the user.
+- [x] multiple choices scheme: users may have to prodive multiple informations for a single service to behave correctly. This needs a complete rethink of how to handle forms and output atoms.
+    - [x] a first approach: choice become in json config a __list__ of choices, asked one by one to the user.
 
 - [ ] support for python instead of ASP
     - [ ] function taking atoms (in json format?) as input, yielding atoms (in json format?) as output

@@ -14,9 +14,9 @@ def parse_configuration_file(json_file:str):
         data = json.load(fd)
     return parse_configuration(data, filesource=json_file)
 
-def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
+def parse_configuration(data:dict, *, filesource: str, verify_and_normalize: bool = True):
     raw_data = copy.deepcopy(data)
-    if not verify:
+    if not verify_and_normalize:
         return data, raw_data  # hope it's valid
 
     # put global options in their namespace
@@ -26,10 +26,18 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             data["global options"][option_name] = value
             del data[option_name]
 
+    # if 'choices options' is not a list, make it one
+    if 'choices options' in data and not isinstance(data['choices options'], (tuple, list)):
+        assert isinstance(data['choices options'], dict), data['choices options']
+        data['choices options'] = [data['choices options']]
+    if 'choices options' not in data:
+        data['choices options'] = []
+
     # ensure the presence of default values if necessary
     def set_default(key, subkey, default_value):
         data.setdefault(key, {})
         data[key].setdefault(subkey, default_value)
+
     set_default('global options', 'location', '/')
     set_default('global options', 'base encoding', '')
     set_default('global options', 'base encoding file', None)
@@ -43,13 +51,6 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('users options', 'type', 'valid-id')
     set_default('users options', 'allowed', {})
     set_default('users options', 'description', "Please indicate your username:")
-    set_default('choices options', 'default', 'all')
-    set_default('choices options', 'type', 'multiple')
-    set_default('choices options', 'description', "Please indicate your preferences here:")
-    set_default('choices options', 'choices', {})
-    set_default('choices options', 'ranks', {})
-    set_default('choices options', 'data atoms', ['user({user})', 'choice({choice})'])
-    set_default('choices options', 'produced atoms', ['ok({user},{choice})'])
     set_default('output options', 'max models', 0)
     set_default('output options', 'model selection', 'first')
     set_default('output options', 'model repr', 'standard')
@@ -71,6 +72,23 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('meta', 'filesource', filesource)
     set_default('meta', 'save state', True)
 
+
+    def set_rec_default(key, subkey, default_value):
+        data.setdefault(key, {})
+        assert isinstance(data[key], list), data[key]
+        # apply the default on all expected subdicts
+        for subdict in data[key]:
+            subdict.setdefault(subkey, default_value)
+
+    set_rec_default('choices options', 'default', 'all')
+    set_rec_default('choices options', 'type', 'multiple')
+    set_rec_default('choices options', 'description', "Please indicate your preferences here:")
+    set_rec_default('choices options', 'choices', {})
+    set_rec_default('choices options', 'ranks', {})
+    set_rec_default('choices options', 'data atoms', ['user({user})', 'choice({choice})'])
+    set_rec_default('choices options', 'produced atoms', ['ok({user},{choice})'])
+
+
     # assign uids to choices and users, if necessary
     gen_uid = map(str, itertools.count(1))
     if data["users options"]["type"] == 'restricted':
@@ -78,26 +96,31 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
             data["users options"]["allowed"] = data["users options"]["allowed"].split(' ')
         if isinstance(data["users options"]["allowed"], (list, tuple, set, frozenset)):
             data["users options"]["allowed"] = {user: next(gen_uid) for user in data["users options"]["allowed"]}
-    if data["choices options"]["type"] in {'multiple users', 'single user'}:
-        data["choices options"]["choices"] = data["users options"]["allowed"]
-        assert isinstance(data["users options"]["allowed"], dict)
-    if isinstance(data["choices options"]["choices"], str):
-        data["choices options"]["choices"] = data["choices options"]["choices"].split(' ')
-    if isinstance(data["choices options"]["choices"], (list, tuple, set, frozenset)):
-        data["choices options"]["choices"] = {choice: next(gen_uid) for choice in data["choices options"]["choices"]}
+    for chop in data["choices options"]:
+        if chop["type"] in {'multiple users', 'single user'}:
+            chop["choices"] = data["users options"]["allowed"]
+            assert isinstance(data["users options"]["allowed"], dict)
+        if isinstance(chop["choices"], str):
+            chop["choices"] = chop["choices"].split(' ')
+        if isinstance(chop["choices"], (list, tuple, set, frozenset)):
+            chop["choices"] = {choice: next(gen_uid) for choice in chop["choices"]}
 
     # derivate values
     if data["global options"]["generated pages"] == 'all':
         data["global options"]["generated pages"] = ["user", "results", "overview", "history", "compilation", "configuration/raw", "configuration", 'reset']
     if data["global options"]["public pages"] is None:
         data["global options"]["public pages"] = data["global options"]["generated pages"]
-    if data["choices options"]["default"] == 'all':
-        data["choices options"]["default"] = list(data["choices options"]["choices"].values())
-    if data["choices options"]["default"] is None or data["choices options"]["default"] == 'none':
-        data["choices options"]["default"] = []
-    data["choices options"]['type repr'] = data["choices options"]['type']  # if type is a range, this ensure to conserve programmatic and human representation
-    if utils.is_human_repr_of_range(data["choices options"]['type']):
-        data["choices options"]['type'] = utils.range_from_human_repr(data["choices options"]['type'])
+
+    for chop in data["choices options"]:
+        if chop["default"] == 'all':
+            chop["default"] = list(chop["choices"].values())
+        if chop["default"] is None or chop["default"] == 'none':
+            chop["default"] = []
+        chop['type repr'] = chop['type']  # if type is a range, this ensure to conserve programmatic and human representation
+        if utils.is_human_repr_of_range(chop['type']):
+            chop['type'] = utils.range_from_human_repr(chop['type'])
+
+
     # get encoding file if any, and add its content the to base encoding
     if data['global options']['base encoding file']:
         try:
@@ -128,10 +151,20 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         if isinstance(data[key][subkey], str):
             data[key][subkey] = data[key][subkey].split(splitter)
         assert isinstance(data[key][subkey], list)
-    str_to_list("choices options", "data atoms")
-    str_to_list("choices options", "produced atoms")
+
     str_to_list("global options", "shows")
     str_to_list("solver options", "cli")
+
+
+    def rec_str_to_list(key, subkey, splitter=' '):
+        assert isinstance(data[key], list), data[key]
+        for sub in data[key]:
+            if isinstance(sub[subkey], str):
+                sub[subkey] = sub[subkey].split(splitter)
+
+    rec_str_to_list("choices options", "data atoms")
+    rec_str_to_list("choices options", "produced atoms")
+
 
     # expand model repr, header repr and footer repr if necessary
     for repr_opt in ('model repr', 'header repr', 'footer repr'):
@@ -190,10 +223,16 @@ def errors_in_configuration(cfg: dict):
     ensure_in("solver options", "engine", {'ASP/clingo'})
     ensure_in("solver options", "solving mode", {'optimals', 'default'})
 
-    if isinstance(cfg["choices options"]['type'], tuple) and len(cfg["choices options"]['type']) == 2 and isinstance(cfg["choices options"]['type'][0], (int, type(None))) and isinstance(cfg["choices options"]['type'][1], (int, type(None))):
-        pass
-    else:  # if it's not a range, must be a string providing one
-        ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'}, {'at least|most <N>', 'less|more than <N>', 'between <N> and <K>'})
+    def rec_ensure_in(key, subkey, ok_values, other_valid_values=set()):
+        for sub in cfg[key]:
+            if (val := sub[subkey]) not in ok_values:
+                errors.append(f"{key} '{subkey}' is invalid: '{val}'. Accepted values are {', '.join(map(repr, set(ok_values)|set(other_valid_values)))}")
+
+    for chop in cfg["choices options"]:
+        if isinstance(chop['type'], tuple) and len(chop['type']) == 2 and isinstance(chop['type'][0], (int, type(None))) and isinstance(chop['type'][1], (int, type(None))):
+            pass
+        else:  # if it's not a range, must be a string providing one
+            rec_ensure_in("choices options", "type", {'single', 'multiple', 'independant ranking', 'single user', 'multiple users'}, {'at least|most <N>', 'less|more than <N>', 'between <N> and <K>'})
 
 
     # type checking
@@ -201,7 +240,6 @@ def errors_in_configuration(cfg: dict):
         if not isinstance((val := cfg[key][subkey]), tuple(types)):
             errors.append(f"{key} '{subkey}' is of invalid type: value {repr(val)} of type {type(val)}. Accepted types are {', '.join(map(repr, types))}")
 
-    ensure_is("choices options", "choices", list, dict)
     ensure_is('solver options', 'cli', list)
     ensure_is("meta", "save state", bool)
     ensure_is("output options", "show human-readable id", bool)
@@ -210,11 +248,19 @@ def errors_in_configuration(cfg: dict):
     ensure_is("output options", "footer repr", list)
     ensure_is('solver options', 'constants', dict)
 
+    def rec_ensure_is(key, subkey, *types):
+        for idx, sub in enumerate(cfg[key], start=1):
+            if not isinstance((val := sub[subkey]), tuple(types)):
+                errors.append(f"In the {idx}-th {key}, '{subkey}' is of invalid type: value {repr(val)} of type {type(val)}. Accepted types are {', '.join(map(repr, types))}")
+
+    rec_ensure_is("choices options", "choices", list, dict)
+
 
     # dependencies checking
-    if cfg["choices options"]["type"] in {'single user', 'multiple users'}:
-        if cfg["users options"]["type"] != 'restricted':
-            errors.append(f"Choices type is user-related ({repr(cfg['choices options']['type'])}), but user type is {repr(cfg['users options']['type'])}, not the expected 'restricted'. (NB: choice of users in an undetermined set is not implemented)")
+    for idx, chop in enumerate(cfg["choices options"], start=1):
+        if chop["type"] in {'single user', 'multiple users'}:
+            if cfg["users options"]["type"] != 'restricted':
+                errors.append(f"In the {idx}-th choices option, choices type is user-related ({repr(chop['type'])}), but user type is {repr(cfg['users options']['type'])}, not the expected 'restricted'. (NB: choice of users in an undetermined set is not implemented)")
 
 
     # verify existence of the template and its content
