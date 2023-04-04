@@ -1,0 +1,12 @@
+
+{% extends 'base.html' %}
+
+{% block tabtitle %}{{username}}{% endblock %}
+{% block title %}Overview of {{username}} choices{% endblock %}
+
+{% block content %}
+    {% for choice_idx, choice_desc, choice_made in choices %}
+        {{choice_desc}} {{choice_made}}
+        <input type='button' value="EDIT" class="btn" onclick="document.location.href='{{root}}user/{{userid}}/{{choice_idx}}';"/><br/><br/>
+    {% endfor%}
+{% endblock %}
