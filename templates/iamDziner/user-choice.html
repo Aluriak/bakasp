@@ -1,6 +1,7 @@
 
 {% extends 'base.html' %}
 {% set expect_submit_button = True %}
+{% block title %} Choice {{choiceid+1}}/{{nb_choices}} {% endblock %}
 
 {% block content %}
 {{preference_choice_text}}
@@ -13,6 +14,7 @@
     {% endblock %}
 
     <br/>
+    <small><a href="{{root}}user/{{userid}}">back to overview</a></small>
     <input id=submitbutton type="submit" value="Set my preferences" />
     <br/>
 
