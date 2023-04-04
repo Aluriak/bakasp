@@ -71,6 +71,7 @@ def create_from_form(aas_config: dict, title: str, period: str, uids: set, asp_f
                 'title': title,
         },
         'users options': {
+            'type': 'restricted',
             'allowed': line_to_list(userline),
         },
         'choices options': {
@@ -92,7 +93,7 @@ def validate_config(config_text: str) -> (dict or None, list[str]):
         assert isinstance(config_text, dict)
         config = config_text
     # parse configuration, and validate
-    return config_module.parse_configuration(config, filesource='browser', verify=True)
+    return config_module.parse_configuration(config, filesource='browser', verify_and_normalize=True)
 
 
 def create_app(configpath: str):
@@ -188,7 +189,7 @@ def create_app(configpath: str):
     # root to the instances index index pages
     @app.route(admin_path_for(''))
     @app.route(path_for(''))
-    def page_instances_indexes(iuid: str, *, admin_code: str):
+    def page_instances_indexes(iuid: str, admin_code: str = None):
         instance_control = bakasp_instances.get(iuid)
         if instance_control:
             return Backend.html_instance_page(instance_control.backend, admin=admin_code, remaining_instance_time=utils.human_repr_of_timestamp(instance_control.datetimelimit))
