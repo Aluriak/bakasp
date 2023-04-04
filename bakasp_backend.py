@@ -78,9 +78,15 @@ class Backend:
     def init_user_choices(self):
         if self.cfg['users options']['type'] == 'restricted':
             users = self.cfg["users options"]["allowed"]
-            self.user_choices = {u: self.cfg["choices options"]["default"] for u in users.values()}
+            self.user_choices = {
+                u: [
+                    self.cfg['choices options'][choiceid]['default']
+                    for choiceid in range(len(self.cfg['choices options']))
+                ]
+                for u in users.values()
+            }
         else:
-            self.user_choices = {}
+            self.user_choices = [{} for _ in range(len(self.cfg['choices options']))]
 
     def save_state(self):
         if self.cfg['meta']['save state']:
@@ -122,11 +128,11 @@ class Backend:
                 return username
         return None
 
-    # @lru_cache(maxsize=len(cfg["choices options"]["choices"]))
     def get_choicename_of(self, targetid: str) -> str or None:
-        for name, uid in self.cfg["choices options"]["choices"].items():
-            if str(uid) == str(targetid):
-                return name
+        for chop in self.cfg["choices options"]:
+            for name, uid in chop["choices"].items():
+                if str(uid) == str(targetid):
+                    return name
         return None
 
 
@@ -145,7 +151,7 @@ class Backend:
     def compile_models(self, force_compilation: bool = False) -> float:
         "return runtime"
         starttime = time.time()
-        self.users_who_changed_their_choices
+        # self.users_who_changed_their_choices
         if not self.users_who_changed_their_choices and not force_compilation:
             return 0.
         self.previous_models_uid = {m.uid for m in self.models}  # remember previous uids
@@ -197,38 +203,72 @@ class Backend:
         else:
             raise NotImplementedError("Sorry. For now, users must be explicitely named.")
 
-    def html_user_choice_page(self, userid):
+    def html_user_overview_page(self, userid):
         username = self.get_username_of(userid) or "Unknown"
-        choices = ((idx, cid, cval, cval in self.user_choices[userid])
-                   for idx, (cid, cval) in enumerate(self.cfg['choices options']['choices'].items()))
-        choicetype_repr = self.cfg['choices options']['type repr']
-        choice_range = self.cfg['choices options']['type']
+        print(self.user_choices)
+        print(self.user_choices[userid])
+        return self.render_template(
+            'user-overview.html', username=username, userid=userid,
+            choices=[
+                (choiceid, choices_dict['description'], self.human_readable_user_choice(userid, choiceid))
+                for choiceid, choices_dict in enumerate(self.cfg['choices options'])
+            ],
+            root=self.root,
+        )
+
+    def human_readable_user_choice(self, userid: str, choiceid: int) -> str:
+        choices = self.user_choices[userid][choiceid]
+        if isinstance(choices, (list, tuple)):
+            return ' or '.join(self.get_choicename_of(c) for c in choices)
+        else:
+            raise NotImplementedError(f"user choice for user {userid} and choice {choiceid} is {choices} of type {type(choices)}, which is not handled. List or tuple is expected.")
+
+    def html_user_choice_page(self, userid, choiceid: int):
+        choiceid = int(choiceid)
+        if choiceid >= len(self.cfg['choices options']):
+            print(f"WARNING access to choiceid {choiceid}, which doesn't exists (there is {len(self.cfg['choices options'])} choices). Redirecting to user overview.")
+            return redirect(f'/user/{userid}')
+        username = self.get_username_of(userid) or "Unknown"
+        choices_dict = self.cfg['choices options'][choiceid]
+        choicetype_repr = choices_dict['type repr']
+        choice_range = choices_dict['type']
         is_range = choice_range != choicetype_repr
+        # print(f'{choicetype_repr=}')
+        # print(f'{choice_range=}')
+        # print(f'{is_range=}')
         if is_range and choice_range not in RANGES_TO_TEMPLATES:
-            print(f"WARNING: {choice_range=} is not in {RANGES_TO_TEMPLATES=}")
+            fname = f"user-choice-range.html"
         elif not is_range and choicetype_repr not in CHOICES_TO_TEMPLATES:
             print(f"WARNING: {choicetype_repr=} is not in {CHOICES_TO_TEMPLATES=}")
-        if is_range:
+            fname = f"user-choice-{CHOICES_TO_TEMPLATES.get(choicetype_repr, choicetype_repr)}.html"
+        elif is_range:
             fname = f"user-choice-{RANGES_TO_TEMPLATES.get(choice_range, choice_range)}.html"
         else:
             fname = f"user-choice-{CHOICES_TO_TEMPLATES.get(choicetype_repr, choicetype_repr)}.html"
         if not os.path.exists(os.path.join(self.template_folder, fname)):
             fname = f"user-choice-not-implemented.html"
-        print(f"{self.cfg['choices options']['type']=}")
+        print(f"{choices_dict['type']=}")
         return self.render_template(
-            fname, username=username, userid=userid,
-            preference_choice_text=self.cfg['choices options']['description'],
-            choicetype=utils.range_as_js(self.cfg['choices options']['type']) if is_range else None,
+            fname, username=username, userid=userid, choiceid=choiceid, nb_choices=len(self.cfg['choices options']),
+            preference_choice_text=choices_dict['description'],
+            choicetype=utils.range_as_js(choice_range) if is_range else None,
             choicetype_repr=choicetype_repr,
-            choices=choices,
+            choices=(
+                (idx, cid, cval, cval in self.user_choices[userid][choiceid])
+                for idx, (cid, cval) in enumerate(choices_dict['choices'].items())
+            ),
             root=self.root,
         )
 
-    def set_user_choice(self, userid, form):
+    def set_user_choice(self, userid, choiceid, form):
+        choiceid = int(choiceid)
         username = self.get_username_of(userid) or "Unknown"
-        self.user_choices[userid] = list(self.user_choice_repr_from_request_form(form))  # keep list, because we need json serializable data
+        self.user_choices[userid][choiceid] = list(self.user_choice_repr_from_request_form(form))  # keep list, because we need json serializable data
         self.users_who_changed_their_choices.add(username)
-        return redirect('/thanks')
+        if int(choiceid) < len(self.cfg['choices options']):  # is there more choices to do ?
+            return redirect(f'/user/{userid}/{choiceid+1}')  # +1 because index starts at 1 in URLs, and +1 to get to next choice
+        else:  # its the last choice to make for this user
+            return redirect('/thanks')
 
     def html_config(self, *, admin: str = None):
         if self.accepts('compilation', admin):
@@ -256,7 +296,7 @@ class Backend:
 
     def html_overview(self, *, admin: str = None):
         if self.accepts('overview', admin):
-            return repr(self.user_choices) + '<br/>' + repr(self.cfg["users options"]["allowed"]) + '<br/>' + repr(self.cfg["choices options"]["choices"]) + '<br/><br/>Encoding:\n<code>' + compute_encoding(self.cfg, self.user_choices) + '</code><br/>' + repr(self.history)
+            return repr(self.user_choices) + '<br/>' + repr(self.cfg["users options"]["allowed"]) + '<br/>' + repr([chop["choices"] for chop in self.cfg["choices options"]]) + '<br/><br/>Encoding:\n<code>' + compute_encoding(self.cfg, self.user_choices) + '</code><br/>' + repr(self.history)
         else:
             return self.render_template('admin-access-required.html', root=self.root)
 
@@ -300,12 +340,18 @@ class Backend:
 
         app.route(root+'user')(self.html_user_list_page)
 
-        @app.route(root+'user/<userid>', methods=['GET', 'POST'])
-        def page_user_choice(userid):
+        @app.route(root+'user/<userid>')
+        def page_user_overview(userid):
+            "show username and its choices, plus links to edit them"
+            return self.html_user_overview_page(userid)
+
+        @app.route(root+'user/<userid>/<choiceid>', methods=['GET', 'POST'])
+        def page_user_choice(userid, choiceid):
+            "show form to set user's choice for given choiceid"
             if request.method == 'POST':
-                return self.set_user_choice(userid, request.form)
+                return self.set_user_choice(userid, choiceid, request.form)
             else:
-                return self.html_user_choice_page(userid)
+                return self.html_user_choice_page(userid, choiceid)
 
         app.route(root+'configuration')(self.html_config)
         app.route(root+'configuration/admin/<admin>')(self.html_config)
