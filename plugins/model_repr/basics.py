@@ -70,7 +70,7 @@ class copy2clipboard(ModelReprPlugin):
         elif self.options.target == 'encoding':
             text = f'target option of copy2clipboard ModelReprPlugin is not valid: {repr(self.options.target)}.'
         else:
-            text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}'
+            text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}. Available are: atoms, title, result, encoding.'
         bid = f'{idx}-{self.options.button_id}' if self.options.button_id else idx
         return self.__create_button(bid, text)
 
@@ -84,7 +84,7 @@ class copy2clipboard(ModelReprPlugin):
 
     def on_footer(self):
         if self.options.target == 'encoding':
-            text = kargs.get('encoding', 'no encoding provided to copy2clipboard.on_header method')
+            text = kargs.get('encoding', 'no encoding provided to copy2clipboard.on_footer method')
         else:
             text = 'target option of copy2clipboard ModelReprPlugin is not valid: {self.options.target}'
         bid = f'{idx}-{self.options.button_id}' if self.options.button_id else idx
