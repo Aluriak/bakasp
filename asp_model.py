@@ -17,8 +17,10 @@ class ShowableModel:
     @staticmethod
     def intersection(models: iter):
         models = iter(models)
-        base_model = next(models)
+        base_model = next(models, None)
         acc = {}
+        if base_model is None:
+            return ShowableModel(-1, frozenset(), [], show_uid=False)
         for pred, args in base_model.atoms:
             acc.setdefault(pred, set()).add(args)
         for model in models:
