@@ -23,7 +23,7 @@ CHOICES_TO_TEMPLATES = {
 }
 
 def get_empty_state():
-    return [{}, [], [], set()]
+    return [{}, set(), []]
 
 
 class ErrorBackend:
@@ -91,18 +91,17 @@ class Backend:
     def save_state(self):
         if self.cfg['meta']['save state']:
             with open(self.filestate, 'w') as fd:
-                json.dump([self.user_choices, list(self.previous_models_uid), self.history, list(self.previous_models_uid)], fd)
-
+                json.dump(self.state, fd)
 
     @property
     def state(self):
-        return self.user_choices, self.previous_models_uid, self.history, self.previous_models_uid
+        return (self.user_choices, set(self.previous_models_uid), self.history)
 
     @state.setter
-    def state(self, state: [dict, list, list, set]):
-        a, b, c, d = state
-        a, b, c, d = dict(a), list(b), list(c), set(d)
-        self.user_choices, self.previous_models_uid, self.history, self.previous_models_uid = a, b, c, d
+    def state(self, state: [dict, set|list, list]):
+        a, b, c = state
+        a, b, c = dict(a), set(b), list(c)
+        self.user_choices, self.previous_models_uid, self.history = a, b, c
 
     def load_state(self):
         if not self.cfg['meta']['save state']:
