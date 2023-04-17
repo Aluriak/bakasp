@@ -261,7 +261,7 @@ class Backend:
         username = self.get_username_of(userid) or "Unknown"
         self.user_choices[userid][choiceid] = list(self.user_choice_repr_from_request_form(form))  # keep list, because we need json serializable data
         self.users_who_changed_their_choices.add(username)
-        if int(choiceid) < len(self.cfg['choices options']):  # is there more choices to do ?
+        if 1+int(choiceid) < len(self.cfg['choices options']):  # is there more choices to do ?
             return redirect(f'/user/{userid}/{choiceid+1}')  # +1 because index starts at 1 in URLs, and +1 to get to next choice
         else:  # its the last choice to make for this user
             return redirect('/thanks')
@@ -323,7 +323,7 @@ class Backend:
         return self.render_template('thanks.html', username='dear user', root=self.root)
 
     def accepts(self, page: str, admin_code: str) -> bool:
-        return page in self.cfg["global options"]["public pages"] or self.ok_admin(admin_code)
+        return page in self.cfg['global options']['public pages'] or self.ok_admin(admin_code)
 
     def ok_admin(self, admin_code: str) -> bool:
         return admin_code and admin_code == self.admin_uid

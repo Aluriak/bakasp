@@ -39,12 +39,15 @@ def gen_uid(cfg: dict, admin_password: bool = False) -> callable:
         raise NotImplementedError(f"UID generation method {uid_gen_method} is not valid.")
 
 
-def create_from_config(aas_config: dict, input_config: dict, period: str, uids: set) -> (str, InstanceControl, str):
+def create_from_config(aas_config: dict, input_config: dict, period: str, uids: set, *, state: tuple = None, admin_uid: str = None) -> (str, InstanceControl, str):
     """Create the backend, return its uid, its instance, the InstanceControl instance, and the page to which the user must be redirected"""
     config, raw_config = validate_config(input_config)
-    uid = None
-    while uid is None or uid in uids:
-        uid, admin_uid = gen_uid(aas_config), gen_uid(aas_config, admin_password=True)
+    if isinstance(uids, str):
+        uid = uids
+    else:  # uids is a set of already in-use uids
+        uid = None
+        while uid is None or uid in uids:
+            uid, admin_uid = gen_uid(aas_config), gen_uid(aas_config, admin_password=True)
 
     if config is None:
         uid = admin_uid
@@ -55,7 +58,10 @@ def create_from_config(aas_config: dict, input_config: dict, period: str, uids: 
     else:
         prefix, target = f'/b/{uid}', f'/b/{uid}/admin/{admin_uid}'
         backend = Backend(uid, admin_uid, config, raw_config, rootpath='/b/{uid}/')
-        ttl = TIMES[period]
+        ttl = (period - time.time()) if isinstance(period, (int, float)) else TIMES[period]
+
+    if state is not None:
+        backend.state = state
 
     ic = InstanceControl(backend, time.time() + ttl, period, raw_config, config is None)
     return uid, ic, target
@@ -100,32 +106,43 @@ def create_aas_app(configpath: str):
     aascfg, _ = aasconfig_module.parse_config_file(configpath)
     bakasp_instances = {}  # uuid -> InstanceControl
     app = Flask(__name__, template_folder=os.path.join('templates/', aascfg['global options']['template']))
+    filestate = utils.filestate_from_uid_and_cfg('aas', aascfg)
 
     def get_aas_state():
-        return [{uid: instance.state for uid, instance in bakasp_instances.items()}]
-    def set_aas_state():
-        return [{uid: instance.state for uid, instance in bakasp_instances.items()}]
+        return [aascfg, {uid: [ic[0].state, ic[1], ic[3], ic.backend.admin_uid] for uid, ic in bakasp_instances.items()}]
+    def get_empty_state():
+        return [aascfg, {}]
+    def set_aas_state(new_state):
+        nonlocal aascfg, bakasp_instances
+        bakasp_instances = {}
+        aascfg, ics = new_state
+        for uid, ic in ics.items():
+            uuid, control, _ = create_from_config(
+                aascfg, state=ic[0], period=ic[1], input_config=ic[2], admin_uid=ic[3], uids=uid
+            )
+            assert uid == uuid, (uid, uuid)
+            bakasp_instances[uuid] = control
+
 
     def save_state():
-        filestate = utils.filestate_from_uid_and_cfg('aas', aascfg)
         if aascfg['meta']['save state']:
             with open(filestate, 'w') as fd:
                 json.dump(get_aas_state(), fd)
 
-    def load_state(self):
-        if not self.cfg['meta']['save state']:
+    def load_state():
+        if not aascfg['meta']['load state']:
             loaded = get_empty_state()
-        elif not os.path.exists(self.filestate):
+        elif not os.path.exists(filestate):
             loaded = get_empty_state()
         else:
             try:
-                with open(self.filestate) as fd:
+                with open(filestate) as fd:
                     loaded = json.load(fd)
             except Exception as err:
                 print(err)
                 print('Empty state loaded')
                 loaded = get_empty_state()
-        self.state = loaded
+        set_aas_state(loaded)
 
 
     @app.route('/create')
@@ -136,7 +153,7 @@ def create_aas_app(configpath: str):
     def creation_of_new_instance_by_config():
         if request.method == 'POST':
             uid, control, target = create_from_config(
-                aascfg, request.form['Config'], request.form['period'], uids=bakasp_instances, uid_creator=create_new_uid
+                aascfg, request.form['Config'], request.form['period'], uids=bakasp_instances
             )
             assert uid not in bakasp_instances
             bakasp_instances[uid] = control
@@ -228,43 +245,45 @@ def create_aas_app(configpath: str):
     def func_for(func: callable) -> callable:
         "Return the function that app can use as a page generator for a route"
         @functools.wraps(func)
-        def wrapper(iuid: str, *, admin_code: str = None):
+        def wrapper(iuid: str, *, admin_code: str = None, **kwargs):
             instance_control = bakasp_instances.get(iuid)
             if instance_control:
                 if 'admin' in inspect.signature(func).parameters.keys():
-                    return func(instance_control.backend, admin=admin_code)
+                    return func(instance_control.backend, admin=admin_code, **kwargs)
                 else:
-                    return func(instance_control.backend)
+                    return func(instance_control.backend, **kwargs)
             else:  # given instance uid is not an existing one
                 return redirect(url_for('index'))
         return wrapper
 
-    UNRESTRICTED_PAGES = {
-        'thanks': Backend.html_thank_you_page,
-        'user/<userid>': Backend.html_user_choice_page,
-        'user': Backend.html_user_list_page,
-    }
-    PAGES = {
-        'configuration': Backend.html_config,
-        'configuration/raw': Backend.html_raw_config,
-        'reset': Backend.html_reset,
-        'results': Backend.html_results,
-        'compilation': Backend.html_compilation,
-        'history': Backend.html_history,
-        'overview': Backend.html_overview,
-    }
-    for path, func in PAGES.items():
-        rpath, apath = path_for(path), admin_path_for(path)
+    # path, func, restricted, post_allowed
+    PAGES = (
+        ('thanks', Backend.html_thank_you_page, False, False),
+        ('user/<userid>/<choiceid>', Backend.html_user_choice_page, False, True),
+        ('user/<userid>', Backend.html_user_overview_page, False, False),
+        ('user', Backend.html_user_list_page, False, False),
+        ('configuration', Backend.html_config, True, False),
+        ('configuration/raw', Backend.html_raw_config, True, False),
+        ('reset', Backend.html_reset, True, False),
+        ('results', Backend.html_results, True, False),
+        ('compilation', Backend.html_compilation, True, False),
+        ('history', Backend.html_history, True, False),
+        ('overview', Backend.html_overview, True, False),
+    )
+    for path, func, restricted, post_allowed in PAGES:
+        rpath = path_for(path)
         func = func_for(func)
-        print(f"\tPaths {rpath} and {apath} redirect to {func.__name__}")
-        app.route(rpath)(func)
-        app.route(apath)(func)
-    for path, func in UNRESTRICTED_PAGES.items():
-        path = path_for(path)
-        func = func_for(func)
-        app.route(path)(func)
-        print(f"\tPath {path} redirects to {func.__name__}")
+        methods = ['GET', 'POST'] if post_allowed else ['GET']
+        if restricted:
+            apath = admin_path_for(path)
+            app.route(rpath, methods=methods)(func)
+            app.route(apath, methods=methods)(func)
+            print(f"\tPaths {rpath} and {apath} redirect to {func.__name__}")
+        else:
+            app.route(rpath, methods=methods)(func)
+            print(f"\tPath {rpath} redirects to {func.__name__}")
 
+    load_state()
     return app
 
 if __name__ == "__main__":

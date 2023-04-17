@@ -55,7 +55,9 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('creation options', 'available times', 'all')
     set_default('creation options', 'available implementations', 'all')
     set_default('global options', 'template', 'iamDziner')
+    set_default('meta', 'load state', True)
     set_default('meta', 'save state', True)
+    set_default('meta', 'filesource', 'aas')
 
     # derivate values
     if data["server options"]["max instances"] == -1:
@@ -96,6 +98,7 @@ def errors_in_configuration(cfg: dict):
             errors.append(f"{key} '{subkey}' is of invalid type: value {repr(val)} of type {type(val)}. Accepted types are {', '.join(map(repr, types))}")
 
     ensure_is('server options', 'max instances', int)
+    ensure_is("meta", "load state", bool)
     ensure_is("meta", "save state", bool)
 
     return errors

@@ -29,7 +29,7 @@ def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this 
 
 def filestate_from_uid_and_cfg(uid: str, cfg: dict):
     base = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
-    return base if uid else base.replace('.json', '---' + uid + '.json')
+    return base.replace('.json', '---' + uid + '.json') if uid else base
 
 
 def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}, optimals_only: bool = False) -> [frozenset]:
