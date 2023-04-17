@@ -60,10 +60,7 @@ class Backend:
         self.render_template = render_template_func
 
         # initialize state
-        if self.uid:
-            self.filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
-        else:
-            self.filestate = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_')).replace('.json', '---' + self.uid + '.json')
+        self.filestate = utils.filestate_from_uid_and_cfg(self.uid, self.cfg)
         self.load_state()
 
         # initialize user choices  (userid -> choices)
@@ -95,7 +92,7 @@ class Backend:
 
     @property
     def state(self):
-        return (self.user_choices, set(self.previous_models_uid), self.history)
+        return (self.user_choices, tuple(set(self.previous_models_uid)), self.history)
 
     @state.setter
     def state(self, state: [dict, set|list, list]):
@@ -367,3 +364,4 @@ class Backend:
         app.route(root+'reset')(self.html_reset)
         app.route(root+'reset/admin/<admin>')(self.html_reset)
 
+        app.backend = self

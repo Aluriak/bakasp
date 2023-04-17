@@ -1,4 +1,5 @@
 
+import os
 import re
 import time
 import random
@@ -24,6 +25,11 @@ def create_errorlist_app(msg: str = 'Sorry, configuration problems prevent this 
     def main_page():
         return f"{msg}<br/><ul>\n" + ''.join(f'<li>{err}</li>\n' for err in errors) + '</ul>'
     return app
+
+
+def filestate_from_uid_and_cfg(uid: str, cfg: dict):
+    base = os.path.join('states/', cfg['meta']['filesource'].replace('/', '--').replace(' ', '_'))
+    return base if uid else base.replace('.json', '---' + uid + '.json')
 
 
 def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}, optimals_only: bool = False) -> [frozenset]:

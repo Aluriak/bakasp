@@ -36,6 +36,14 @@ def create_app(jsonfile: str, *, blueprint:bool = False, admin: str = None) -> F
         return utils.create_errorlist_app(errors=raw_cfg, blueprint=blueprint)
 
 
+def create_app_with_state(jsonfile: str, *, blueprint:bool = False, admin: str = None) -> Backend:
+    cfg, raw_cfg = parse_configuration_file(jsonfile)
+    if not cfg:  # in case of errors
+        return utils.create_errorlist_app(errors=raw_cfg, blueprint=blueprint)
+    app = create_website(cfg, raw_cfg, admin=admin)
+    back = app.backend
+
+
 if __name__ == "__main__":
     app = create_app(sys.argv[1])
     app.run(port=8080, debug=True)

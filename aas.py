@@ -24,7 +24,7 @@ import bakasp_backend
 from bakasp_backend import Backend
 
 
-InstanceControl = namedtuple('InstanceControl', 'backend, datetimelimit, period_label, haserror')
+InstanceControl = namedtuple('InstanceControl', 'backend, datetimelimit, period_label, raw_config, haserror')
 
 
 def gen_uid(cfg: dict, admin_password: bool = False) -> callable:
@@ -57,7 +57,7 @@ def create_from_config(aas_config: dict, input_config: dict, period: str, uids: 
         backend = Backend(uid, admin_uid, config, raw_config, rootpath='/b/{uid}/')
         ttl = TIMES[period]
 
-    ic = InstanceControl(backend, time.time() + ttl, period, config is None)
+    ic = InstanceControl(backend, time.time() + ttl, period, raw_config, config is None)
     return uid, ic, target
 
 
@@ -96,15 +96,41 @@ def validate_config(config_text: str) -> (dict or None, list[str]):
     return config_module.parse_configuration(config, filesource='browser', verify_and_normalize=True)
 
 
-def create_app(configpath: str):
+def create_aas_app(configpath: str):
     aascfg, _ = aasconfig_module.parse_config_file(configpath)
     bakasp_instances = {}  # uuid -> InstanceControl
     app = Flask(__name__, template_folder=os.path.join('templates/', aascfg['global options']['template']))
 
+    def get_aas_state():
+        return [{uid: instance.state for uid, instance in bakasp_instances.items()}]
+    def set_aas_state():
+        return [{uid: instance.state for uid, instance in bakasp_instances.items()}]
+
+    def save_state():
+        filestate = utils.filestate_from_uid_and_cfg('aas', aascfg)
+        if aascfg['meta']['save state']:
+            with open(filestate, 'w') as fd:
+                json.dump(get_aas_state(), fd)
+
+    def load_state(self):
+        if not self.cfg['meta']['save state']:
+            loaded = get_empty_state()
+        elif not os.path.exists(self.filestate):
+            loaded = get_empty_state()
+        else:
+            try:
+                with open(self.filestate) as fd:
+                    loaded = json.load(fd)
+            except Exception as err:
+                print(err)
+                print('Empty state loaded')
+                loaded = get_empty_state()
+        self.state = loaded
+
 
     @app.route('/create')
     def creation_of_new_instance():
-        return render_template('creation-form.html', title='Form creation', description='Create a new instance from', methods=(('/create/byconfig', 'a raw configuration description in JSON'), ('/create/byform', 'create from a high level form preventing you to make mistakes')))
+        return render_template('creation-form.html', title='Form creation', description='Create a new instance from', methods=(('/create/byconfig', 'a raw configuration description in JSON'), ('/create/byform', 'create from a high level form preventing you to make mistakes')), root='/')
 
     @app.route('/create/byconfig', methods=['GET', 'POST'])
     def creation_of_new_instance_by_config():
@@ -116,7 +142,7 @@ def create_app(configpath: str):
             bakasp_instances[uid] = control
             return redirect(target)
         else:
-            return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(TIMES)))
+            return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(TIMES)), root='/')
 
     @app.route('/create/byform', methods=['GET', 'POST'])
     def creation_of_new_instance_by_form():
@@ -134,6 +160,7 @@ def create_app(configpath: str):
             )
             assert uid not in bakasp_instances
             bakasp_instances[uid] = control
+            save_state()
             return redirect(target)
         else:
             return render_template(
@@ -143,12 +170,13 @@ def create_app(configpath: str):
                 periods=((t, idx==0) for idx, t in enumerate(TIMES)),
                 implementations=((t, idx==0) for idx, t in enumerate(AVAILABLE_IMPLEMENTATIONS)),
                 choicetypes=((t, idx==0) for idx, t in enumerate(AVAILABLE_CHOICE_TYPES)),
+                root='/'
             )
 
 
     @app.route('/')
     def index():
-        return render_template('index.html', title='Bakasp', description='Welcome !', public_pages=['create_instance'])
+        return render_template('index.html', title='Bakasp', description='Welcome !', public_pages=['create_instance'], root='/')
 
     @app.route('/clear')
     def clear_page():
@@ -167,15 +195,15 @@ def create_app(configpath: str):
             **Counter('nb_instances_'+c.period_label for c in bakasp_instances.values()),
             'nb_error_instances': sum(1 for c in bakasp_instances.values() if c.haserror),
         }
-        return render_template('aas-stats.html', stats=stats)
+        return render_template('aas-stats.html', stats=stats, root='/')
 
     @app.route('/stats/all')
     def all_stats_page():
         instances = (
-            f"<a href='/b/{c.backend.uid}/admin/{c.backend.admin_uid}'>{c.backend.config.main_page_options.title or 'UNTITLED'}</a><br/>\n"
+            f"<a href='/b/{c.backend.uid}/admin/{c.backend.admin_uid}'>{c.backend.cfg['main page options']['title'] + 'UNTITLED'}</a><br/>\n"
             for c in bakasp_instances.values()
         )
-        return ''.join(instances)
+        return '<center>Instances:</center><br/>' + ''.join(instances) + repr(bakasp_instances)
 
     def path_for(page: str, admin=False) -> str:
         page = page.rstrip('/')
@@ -240,5 +268,5 @@ def create_app(configpath: str):
     return app
 
 if __name__ == "__main__":
-    app = create_app(sys.argv[1])
+    app = create_aas_app(sys.argv[1])
     app.run(port=8080, debug=True)
