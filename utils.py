@@ -46,9 +46,7 @@ def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [
     if sampling:
         if len(models) > n:
             models = random.sample(models, n)
-        yield from models
-    else:
-        yield from models
+    yield from models
 
 
 def by_chunks(iterable, n, fillvalue=None):
@@ -208,6 +206,7 @@ def range_from_human_repr(s: str, accept_impossible_range:bool = False) -> (int,
     if refuse_impossible_range and low is not None and hih is not None and low > hih:
         raise ValueError(f"Range [{low}:{hih}] obtained from {repr(s)} is not a valid range.")
     return low, hih
+
 
 def is_human_repr_of_range(s: str) -> bool:
     try:

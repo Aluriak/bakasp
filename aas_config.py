@@ -37,10 +37,10 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
         return data, raw_data  # hope it's valid
 
     # put global options in their namespace
-    data.setdefault("global options", {})
+    data.setdefault('global options', {})
     for option_name, value in tuple(data.items()):
         if not option_name.endswith(' options'):
-            data["global options"][option_name] = value
+            data['global options'][option_name] = value
             del data[option_name]
 
     # ensure the presence of default values if necessary
@@ -54,26 +54,28 @@ def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
     set_default('server options', 'statefile', 'memorable')
     set_default('creation options', 'available times', 'all')
     set_default('creation options', 'available implementations', 'all')
+    set_default('creation options', 'available choices types', 'all')
     set_default('global options', 'template', 'iamDziner')
     set_default('meta', 'load state', True)
     set_default('meta', 'save state', True)
     set_default('meta', 'filesource', 'aas')
 
     # derivate values
-    if data["server options"]["max instances"] == -1:
-        data["server options"]["max instances"] = 0
-    if data["creation options"]["available times"] == 'all':
-        data["creation options"]["available times"] = tuple(TIMES)
-    if data["creation options"]["available implementations"] == 'all':
-        data["creation options"]["available implementations"] = tuple(AVAILABLE_IMPLEMENTATIONS)
+    if data['server options']['max instances'] == -1:
+        data['server options']['max instances'] = 0
+    if data['creation options']['available times'] == 'all':
+        data['creation options']['available times'] = TIMES
+    if data['creation options']['available implementations'] == 'all':
+        data['creation options']['available implementations'] = AVAILABLE_IMPLEMENTATIONS
+    if data['creation options']['available choices types'] == 'all':
+        data['creation options']['available choices types'] = tuple(AVAILABLE_CHOICE_TYPES)
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):
         if isinstance(data[key][subkey], str):
             data[key][subkey] = data[key][subkey].split(splitter)
         assert isinstance(data[key][subkey], (tuple, list))
-    str_to_list("creation options", "available times")
-    str_to_list("creation options", "available implementations")
+    str_to_list('creation options', 'available choices types')
 
     return data, raw_data
 
@@ -100,6 +102,8 @@ def errors_in_configuration(cfg: dict):
     ensure_is('server options', 'max instances', int)
     ensure_is("meta", "load state", bool)
     ensure_is("meta", "save state", bool)
+    ensure_is('creation options', 'available implementations', dict)
+    ensure_is('creation options', 'available times', dict)
 
     return errors
 

@@ -19,7 +19,6 @@ from flask import Flask, render_template, redirect, request, url_for
 import config as config_module
 import hashname
 import aas_config as aasconfig_module
-from aas_config import TIMES, AVAILABLE_CHOICE_TYPES, AVAILABLE_IMPLEMENTATIONS
 import bakasp_backend
 from bakasp_backend import Backend
 
@@ -39,7 +38,7 @@ def gen_uid(cfg: dict, admin_password: bool = False) -> callable:
         raise NotImplementedError(f"UID generation method {uid_gen_method} is not valid.")
 
 
-def create_from_config(aas_config: dict, input_config: dict, period: str, uids: set, *, state: tuple = None, admin_uid: str = None) -> (str, InstanceControl, str):
+def create_from_config(aas_config: dict, input_config: dict, period: str|float, uids: set, *, state: tuple = None, admin_uid: str = None) -> (str, InstanceControl, str):
     """Create the backend, return its uid, its instance, the InstanceControl instance, and the page to which the user must be redirected"""
     config, raw_config = validate_config(input_config)
     if isinstance(uids, str):
@@ -58,7 +57,12 @@ def create_from_config(aas_config: dict, input_config: dict, period: str, uids: 
     else:
         prefix, target = f'/b/{uid}', f'/b/{uid}/admin/{admin_uid}'
         backend = Backend(uid, admin_uid, config, raw_config, rootpath='/b/{uid}/')
-        ttl = (period - time.time()) if isinstance(period, (int, float)) else TIMES[period]
+        if isinstance(period, (int, float)):
+            ttl = period - time.time()
+            period = utils.human_repr_of_diffstamp(ttl)
+        else:
+            assert isinstance(period, str)
+            aas_config['creation options']['available times'][period]
 
     if state is not None:
         backend.state = state
@@ -159,7 +163,7 @@ def create_aas_app(configpath: str):
             bakasp_instances[uid] = control
             return redirect(target)
         else:
-            return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(TIMES)), root='/')
+            return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available times'])), root='/')
 
     @app.route('/create/byform', methods=['GET', 'POST'])
     def creation_of_new_instance_by_form():
@@ -170,7 +174,7 @@ def create_aas_app(configpath: str):
                 request.form['title'],
                 request.form['period'],
                 bakasp_instances,
-                AVAILABLE_IMPLEMENTATIONS[request.form['implementation']],
+                aascfg['creation options']['available implementations'][request.form['implementation']],
                 request.form['users'],
                 request.form['choicetype'],
                 choices
@@ -184,9 +188,9 @@ def create_aas_app(configpath: str):
                 'creation-form-by-form.html',
                 title='Form creation',
                 description='',
-                periods=((t, idx==0) for idx, t in enumerate(TIMES)),
-                implementations=((t, idx==0) for idx, t in enumerate(AVAILABLE_IMPLEMENTATIONS)),
-                choicetypes=((t, idx==0) for idx, t in enumerate(AVAILABLE_CHOICE_TYPES)),
+                periods=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available times'])),
+                implementations=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available implementations'])),
+                choicetypes=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available choices types'])),
                 root='/'
             )
 
@@ -208,9 +212,9 @@ def create_aas_app(configpath: str):
     @app.route('/stats')
     def stats_page():
         stats = {
-            'nb_instances': len(bakasp_instances),
-            **Counter('nb_instances_'+c.period_label for c in bakasp_instances.values()),
-            'nb_error_instances': sum(1 for c in bakasp_instances.values() if c.haserror),
+            '#instances': len(bakasp_instances),
+            **Counter('#instances deleted in '+c.period_label for c in bakasp_instances.values()),
+            '#error instances': sum(1 for c in bakasp_instances.values() if c.haserror),
         }
         return render_template('aas-stats.html', stats=stats, root='/')
 
@@ -240,6 +244,12 @@ def create_aas_app(configpath: str):
             return Backend.html_instance_page(instance_control.backend, admin=admin_code, remaining_instance_time=utils.human_repr_of_timestamp(instance_control.datetimelimit))
         else:  # given instance uid is not an existing one
             return redirect(url_for('index'))
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        # note that we set the 404 status explicitly
+        # return render_template('404.html'), 404
+        return redirect(url_for('index'))
 
     # Now do the same for the remaining pages
     def func_for(func: callable) -> callable:
