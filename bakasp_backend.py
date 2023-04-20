@@ -328,6 +328,14 @@ class Backend:
     def ok_admin(self, admin_code: str) -> bool:
         return admin_code and admin_code == self.admin_uid
 
+    def post_user_choice_page(self, userid, choiceid):
+        "show form to set user's choice for given choiceid"
+        print('HTTVUW:', request.method)
+        if request.method == 'POST':
+            return self.set_user_choice(userid, choiceid, request.form)
+        else:
+            return self.html_user_choice_page(userid, choiceid)
+
 
     def link_to_flask_app(self, app, root: str = '/'):
         app.route(root)(self.html_instance_page)
@@ -335,19 +343,9 @@ class Backend:
         app.route(root+'thanks')(self.html_thank_you_page)
 
         app.route(root+'user')(self.html_user_list_page)
+        app.route(root+'user/<userid>')(self.html_user_overview_page)
+        app.route(root+'user/<userid>/<choiceid>', methods=['GET', 'POST'])(self.post_user_choice_page)
 
-        @app.route(root+'user/<userid>')
-        def page_user_overview(userid):
-            "show username and its choices, plus links to edit them"
-            return self.html_user_overview_page(userid)
-
-        @app.route(root+'user/<userid>/<choiceid>', methods=['GET', 'POST'])
-        def page_user_choice(userid, choiceid):
-            "show form to set user's choice for given choiceid"
-            if request.method == 'POST':
-                return self.set_user_choice(userid, choiceid, request.form)
-            else:
-                return self.html_user_choice_page(userid, choiceid)
 
         app.route(root+'configuration')(self.html_config)
         app.route(root+'configuration/admin/<admin>')(self.html_config)

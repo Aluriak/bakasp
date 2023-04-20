@@ -62,7 +62,7 @@ def create_from_config(aas_config: dict, input_config: dict, period: str|float, 
             period = utils.human_repr_of_diffstamp(ttl)
         else:
             assert isinstance(period, str)
-            aas_config['creation options']['available times'][period]
+            ttl = time.time() + aas_config['creation options']['available times'][period]
 
     if state is not None:
         backend.state = state
@@ -266,10 +266,9 @@ def create_aas_app(configpath: str):
                 return redirect(url_for('index'))
         return wrapper
 
-    # path, func, restricted, post_allowed
-    PAGES = (
+    PAGES = (  # path, func, restricted, post_allowed
         ('thanks', Backend.html_thank_you_page, False, False),
-        ('user/<userid>/<choiceid>', Backend.html_user_choice_page, False, True),
+        ('user/<userid>/<choiceid>', Backend.post_user_choice_page, False, True),
         ('user/<userid>', Backend.html_user_overview_page, False, False),
         ('user', Backend.html_user_list_page, False, False),
         ('configuration', Backend.html_config, True, False),
