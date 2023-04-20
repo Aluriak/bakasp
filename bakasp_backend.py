@@ -262,9 +262,9 @@ class Backend:
         self.user_choices[userid][choiceid] = list(self.user_choice_repr_from_request_form(form))  # keep list, because we need json serializable data
         self.users_who_changed_their_choices.add(username)
         if 1+int(choiceid) < len(self.cfg['choices options']):  # is there more choices to do ?
-            return redirect(f'/user/{userid}/{choiceid+1}')  # +1 because index starts at 1 in URLs, and +1 to get to next choice
+            return redirect(f'{self.root}user/{userid}/{choiceid+1}')  # +1 because index starts at 1 in URLs, and +1 to get to next choice
         else:  # its the last choice to make for this user
-            return redirect('/thanks')
+            return redirect(f'{self.root}thanks')
 
     def html_config(self, *, admin: str = None):
         if self.accepts('compilation', admin):
