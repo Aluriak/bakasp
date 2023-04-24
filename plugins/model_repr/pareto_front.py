@@ -30,10 +30,10 @@ class ParetoFront(ModelReprPlugin):
         "kind": 'pareto front',
         "x": 'metric_x',
         "y": 'metric_y',
-        "title": "Pareto front of solutions according to {x_label} and {y_label} among {optimal_models_count}",
+        "title": "Pareto front of solutions according to {x_label} and {y_label} among {optimal_models_count} models",
         "x_label": "score X",
         "y_label": "score Y",
-        "place": "footer",
+        "place": "header",
         "width": 600,
         "height": 400,
         "model optimality flag": "<u>OPTIMAL</u><br/><br/>",
@@ -80,3 +80,43 @@ class ParetoFront(ModelReprPlugin):
         "We expect that function to be called after creation of footer and headers"
         if uid in (m.uid for m in self.optimal_models.values()):
             return self.options.model_optimality_flag or ''
+
+
+class ParetoFront3D(ParetoFront):
+    """3D version of pareto front visualization with plotly"""
+    OPTIONS = {
+        "kind": 'pareto front 3D',
+        "x": 'metric_x',
+        "y": 'metric_y',
+        "z": 'metric_z',
+        "title": "Pareto front of solutions according to {x_label}, {y_label} and {z_label} among {optimal_models_count} models",
+        "x_label": "score X",
+        "y_label": "score Y",
+        "z_label": "score Z",
+        "place": "header",
+        "width": 600,
+        "height": 400,
+        "model optimality flag": "<u>OPTIMAL</u><br/><br/>",
+    }
+
+    def plot_scatter_html(self):
+        x, y, z, uid = zip(*([*s, m.uid] for s, m in self.optimal_models.items()))
+        p = express.scatter(
+            {'x': x, 'y': y, 'z': z, 'uid': uid}, x='x', y='y', z='z',
+            title=self.options.title.format(x_label=self.options.x_label, y_label=self.options.y_label, z_label=self.options.z_label, optimal_models_count=len(x)),
+            labels={'x': self.options.x_label, 'y': self.options.y_label, 'z': self.options.z_label},
+            text='uid',
+            width=self.options.width,
+            height=self.options.height,
+        )
+        p.update_traces(textposition='top center')
+        with io.StringIO() as out:
+            p.write_html(out, auto_open=False, include_plotlyjs='cdn', full_html=False)
+            return out.getvalue()
+
+    def get_model_score(self, model: object):
+        return (
+            int(next((args[0] for pred, args in model.atoms if pred == self.options.x and len(args)==1), 0)),
+            int(next((args[0] for pred, args in model.atoms if pred == self.options.y and len(args)==1), 0)),
+            int(next((args[0] for pred, args in model.atoms if pred == self.options.z and len(args)==1), 0))
+        )
