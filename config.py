@@ -53,9 +53,12 @@ def parse_configuration(data:dict, *, filesource: str, verify_and_normalize: boo
     set_default('users options', 'description', "Please indicate your username:")
     set_default('output options', 'max models', 0)
     set_default('output options', 'model selection', 'first')
-    set_default('output options', 'model repr', 'standard')
+    set_default('output options', 'model header repr', 'standard')
+    set_default('output options', 'model repr', [])
+    set_default('output options', 'model footer repr', 'standard')
     set_default('output options', 'insatisfiability message', "<i>That program is unsatisfiable.</i>")
     set_default('output options', 'show human-readable id', True)
+    set_default('output options', 'plugin repr', [])
     set_default('output options', 'header repr', 'standard')
     set_default('output options', 'footer repr', 'standard')
     set_default('output options', 'sep repr', {})
@@ -134,11 +137,14 @@ def parse_configuration(data:dict, *, filesource: str, verify_and_normalize: boo
             else:  # there is some multilines comments. Arf.
                 pass  # nothing to do
             data['global options']['base encoding'] += ' ' + encoding
-    if data['output options']['model repr'] == 'standard':
-        data['output options']['model repr'] = [
-            {"kind": "title", "index": True, "uid": True },
+    if data['output options']['model header repr'] == 'standard':
+        data['output options']['model header repr'] = [
+            {"kind": "title", "index": True, "uid": True},
+        ]
+    if data['output options']['model footer repr'] == 'standard':
+        data['output options']['model footer repr'] = [
             {"kind": "raw", "shows": "all" },
-            {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
+            {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns"},
             {"kind": "copy2clipboard"},
         ]
     if data['output options']['header repr'] == 'standard':
@@ -167,7 +173,7 @@ def parse_configuration(data:dict, *, filesource: str, verify_and_normalize: boo
 
 
     # expand model repr, header repr and footer repr if necessary
-    for repr_opt in ('model repr', 'header repr', 'footer repr'):
+    for repr_opt in ('model header repr', 'model repr', 'model footer repr', 'header repr', 'footer repr', 'plugin repr'):
         value = data['output options'][repr_opt]
         if isinstance(value, str):  # probably a plugin name, let's run the default
             value = [{'kind': value}]

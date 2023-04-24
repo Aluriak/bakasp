@@ -58,12 +58,18 @@ class ModelReprPlugin(Plugin):
 
     def repr_model(self, *args, **kwargs):
         ret = getattr(self, 'on_model', lambda *a, **k: '')(*args, **kwargs)
-        return ret if isinstance(ret, str) else ''.join(map(str, ret))  # handle generator, lists,…
+        if ret is None: return ''
+        if isinstance(ret, str): return ret
+        return ''.join(map(str, ret))  # handle generator, lists,…
 
     def repr_header(self, *args, **kwargs):
         ret = getattr(self, 'on_header', lambda *a, **k: '')(*args, **kwargs)
-        return ret if isinstance(ret, str) else ''.join(map(str, ret))  # handle generator, lists,…
+        if ret is None: return ''
+        if isinstance(ret, str): return ret
+        return ''.join(map(str, ret))  # handle generator, lists,…
 
     def repr_footer(self, *args, **kwargs):
         ret = getattr(self, 'on_footer', lambda *a, **k: '')(*args, **kwargs)
-        return ret if isinstance(ret, str) else ''.join(map(str, ret))  # handle generator, lists,…
+        if ret is None: return ''
+        if isinstance(ret, str): return ret
+        return ''.join(map(str, ret))  # handle generator, lists,…

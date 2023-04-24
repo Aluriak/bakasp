@@ -21,7 +21,7 @@ function copyTextToClipboard(copybutton, text, new_but_text="Copied !", duration
 
     {{header}} <br/>
     {% for model in models %}
-        {{model.html_repr}} <br/>
+        {{model.html_repr()}} <br/>
     {% endfor %}
     {% if not models %}
         <center>no model to show</center>

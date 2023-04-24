@@ -51,7 +51,6 @@ class Backend:
         self.root = rootpath.format(uid=self.uid)
         self.template_folder = os.path.join('templates/', cfg['global options']['template'])
         self.users_who_changed_their_choices = set()
-        self.stats = {}  # some stats about global state
         self.models = []  # list of all found models
         self.result_header, self.result_footer = '', ''  # header and footer of the result page
         self.history = []  # (datetime, userids -> choices, new_models, lost_models)
@@ -67,9 +66,15 @@ class Backend:
         self.init_user_choices()
 
         # Get the renderer of models, headers and footers from the plugins system and accordingly to the configuration.
-        self.model_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model repr'], self.get_username_of, self.get_choicename_of))
-        self.header_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['header repr'], self.get_username_of, self.get_choicename_of))
-        self.footer_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['footer repr'], self.get_username_of, self.get_choicename_of))
+        self.plugin_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['plugin repr'], self.get_username_of, self.get_choicename_of))
+        self.model_repr_plugins = (
+            *tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model header repr'], self.get_username_of, self.get_choicename_of)),
+            *tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model repr'], self.get_username_of, self.get_choicename_of)),
+            *self.plugin_repr_plugins,
+            *tuple(model_repr.gen_model_repr_plugins(cfg['output options']['model footer repr'], self.get_username_of, self.get_choicename_of)),
+        )
+        self.header_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['header repr'], self.get_username_of, self.get_choicename_of)) + self.plugin_repr_plugins
+        self.footer_repr_plugins = tuple(model_repr.gen_model_repr_plugins(cfg['output options']['footer repr'], self.get_username_of, self.get_choicename_of)) + self.plugin_repr_plugins
 
 
     def init_user_choices(self):
@@ -155,17 +160,16 @@ class Backend:
         for idx, model in enumerate(sorted(list(solve_encoding(self.cfg, self.user_choices))), start=1):
             self.models.append(self.create_asp_model(idx, model))
         self.save_history(force_save=force_compilation)
-        self.stats['compilation_runtime'] = time.time() - starttime
-        self.render_page_elements()
-        return self.stats['compilation_runtime']
+        stats = {}
+        stats['models'] = list(self.models)
+        stats['nb_models'] = len(self.models)
+        stats['common_atoms'] = ShowableModel.intersection(self.models)
+        stats['compilation_runtime'] = time.time() - starttime
+        stats['compilation_runtime_repr'] = utils.human_repr_of_runtime(stats['compilation_runtime'])
+        self.result_header = Markup(''.join(p.repr_header(**stats) for p in self.header_repr_plugins))
+        self.result_footer = Markup(''.join(p.repr_footer(**stats) for p in self.footer_repr_plugins))
+        return stats['compilation_runtime']
 
-    def render_page_elements(self):
-        self.stats['models'] = list(self.models)
-        self.stats['nb_models'] = len(self.models)
-        self.stats['compilation_runtime_repr'] = utils.human_repr_of_runtime(self.stats['compilation_runtime'])
-        self.stats['common_atoms'] = ShowableModel.intersection(self.models)
-        self.result_header = Markup(''.join(p.repr_header(**self.stats) for p in self.header_repr_plugins))
-        self.result_footer = Markup(''.join(p.repr_footer(**self.stats) for p in self.footer_repr_plugins))
 
     def save_history(self, force_save: bool = False):
         # NB: for this to work correctly, compilation must have been done just before

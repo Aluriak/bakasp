@@ -11,7 +11,7 @@
         "type": "multiple users"
     },
     "output options": {
-        "model repr": [
+        "model header repr": [
             {
                 "kind": "title",
                 "index": true,
@@ -20,7 +20,9 @@
             {
                 "kind": "raw",
                 "shows": "all"
-            },
+            }
+        ],
+        "model footer repr": [
             {
                 "kind": "table/2",
                 "rows": "user",

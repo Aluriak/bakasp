@@ -213,12 +213,14 @@ See [ModelReprPlugin subclasses](plugins/model_repr/), the [configuration exampl
 trying to show all capabilities of that option and the following example of valid value for model repr:
 
     "output options": {
-        "model repr": [
+        "model header repr": [
             {
                 "kind": "title",
                 "index": true,
                 "uid": true
-            },
+            }
+        ],
+        "model footer repr": [
             {
                 "kind": "raw",
                 "shows": "all"
@@ -256,8 +258,10 @@ This model representation is broken in three parts:
 The default representation, `standard`, looks like this :
 
     "output options": {
-        "model repr": [
+        "model header repr": [
             {"kind": "title", "index": True, "uid": True },
+        ],
+        "model footer repr": [
             {"kind": "raw", "shows": "all" },
             {"kind": "table/2", "rows": "user", "columns": "choice", "source": "assoc/rows,columns" },
         ],
@@ -368,10 +372,7 @@ String going just under the title, and before all technical links.
 - [ ] plugin system for other parts of the soft ? forms maybe ?
 
 - [ ] implement other model representations
-    - [ ] when multiple metrics are used, show the solutions in a pareto front.
-        - [ ] requires asprin: https://potassco.org/asprin/ (pip install asprin, not so hard to integrate then)
-        - [ ] 2D: https://chart-studio.plotly.com/~JoostvDoorn/79.embed
-        - [ ] 3D: https://chart-studio.plotly.com/~dlindmark/139.embed
+    - [x] when multiple metrics are used, show the solutions in a pareto front (Without using asprin ; pareto front computation is made by hand, without minimizations and maximizations)
 
 - [ ] examples
     - [ ] carpooling for lunch (multiple cars, multiple restaurants, each human has its preferences of restaurants, not all have a car, trying to minimize the number of used car -> may need an exploration of paretto front)

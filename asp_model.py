@@ -10,9 +10,11 @@ class ShowableModel:
     def __init__(self, idx: int, clyngor_model: frozenset, repr_funcs: list[callable], show_uid: bool):
         self.atoms = model_stable_repr(clyngor_model)
         self.uid = hashname.from_obj(self.atoms) if show_uid else None
-        self.idx, self.repr_funcs = idx, repr_funcs
+        self.idx, self.repr_funcs = idx, tuple(repr_funcs)
+
+    def html_repr(self):
         # Markup is necessary for flask to render the html, instead of just writing it as-is
-        self.html_repr = Markup(''.join(func(self.idx, self.uid, self) for func in repr_funcs))
+        return Markup(''.join(func(self.idx, self.uid, self) for func in self.repr_funcs))
 
     @staticmethod
     def intersection(models: iter):
