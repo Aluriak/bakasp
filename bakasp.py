@@ -6,7 +6,8 @@ import json
 import time
 import itertools
 from functools import lru_cache
-from flask import Flask, request, redirect, url_for, render_template, Markup
+from flask import Flask, request, redirect, url_for, render_template
+from markupsafe import Markup
 
 import utils
 import model_repr
