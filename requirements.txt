@@ -1,0 +1,4 @@
+clyngor==0.4.3
+Flask==2.3.2
+pandas==2.0.2
+plotly==5.15.0
