@@ -51,4 +51,5 @@ def solve_encoding(cfg: dict, user_choices: dict):
         cli_options=cfg['solver options']['cli'],
         constants=cfg['solver options']['constants'],
         optimals_only=cfg['solver options']['solving mode'] == 'optimals',
+        clingo_bin_path=cfg['solver options']['path'],
     )

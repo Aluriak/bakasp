@@ -32,7 +32,7 @@ def filestate_from_uid_and_cfg(uid: str, cfg: dict):
     return base.replace('.json', '---' + uid + '.json') if uid else base
 
 
-def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}, optimals_only: bool = False) -> [frozenset]:
+def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [], constants: dict = {}, optimals_only: bool = False, clingo_bin_path: str = 'clingo') -> [frozenset]:
     "Call to the ASP solver with given encoding and n/sampling config values"
 
     if optimals_only:
@@ -42,7 +42,7 @@ def call_ASP_solver(encoding: str, n: int, sampling: bool, cli_options: list = [
     else:
         converter = list
 
-    models = converter(clyngor.solve(inline=encoding, nb_model=int(n), options=cli_options, constants=constants))
+    models = converter(clyngor.solve(inline=encoding, nb_model=int(n), options=cli_options, constants=constants, clingo_bin_path=clingo_bin_path))
     if sampling:
         if len(models) > n:
             models = random.sample(models, n)
