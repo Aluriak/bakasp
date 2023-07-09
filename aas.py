@@ -10,6 +10,7 @@ import sys
 import json
 import uuid
 import time
+import glob
 import utils
 import inspect
 import functools
@@ -151,7 +152,11 @@ def create_aas_app(configpath: str):
 
     @app.route('/create')
     def creation_of_new_instance():
-        return render_template('creation-form.html', title='Form creation', description='Create a new instance from', methods=(('/create/byconfig', 'a raw configuration description in JSON'), ('/create/byform', 'create from a high level form preventing you to make mistakes')), root='/')
+        return render_template('creation-form.html', title='Form creation', description='Create a new instance from', methods=(
+            ('/create/byconfig', 'a raw configuration description in JSON'),
+            ('/create/byform', 'create from a high level form preventing you to make mistakes'),
+            ('/create/byexample', 'use an handmade example'),
+        ), root='/')
 
     @app.route('/create/byconfig', methods=['GET', 'POST'])
     def creation_of_new_instance_by_config():
@@ -164,6 +169,22 @@ def create_aas_app(configpath: str):
             return redirect(target)
         else:
             return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available times'])), root='/')
+
+    @app.route('/create/byexample', methods=['GET', 'POST'])
+    def creation_of_new_instance_by_example():
+        if request.method == 'POST':
+            example_name = request.form['example']
+            with open('examples/' + example_name) as fd:
+                config = fd.read()
+            uid, control, target = create_from_config(
+                aascfg, config, request.form['period'], uids=bakasp_instances
+            )
+            assert uid not in bakasp_instances
+            bakasp_instances[uid] = control
+            return redirect(target)
+        else:
+            examples = list(os.path.basename(f) for f in glob.glob('examples/*'))
+            return render_template('creation-form-by-example.html', title='Example picker', description='choose which example you want to test', examples=examples, periods=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available times'])), root='/')
 
     @app.route('/create/byform', methods=['GET', 'POST'])
     def creation_of_new_instance_by_form():
