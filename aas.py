@@ -166,6 +166,7 @@ def create_aas_app(configpath: str):
             )
             assert uid not in bakasp_instances
             bakasp_instances[uid] = control
+            save_state()
             return redirect(target)
         else:
             return render_template('creation-form-by-config.html', title='Form creation', description='', periods=((t, idx==0) for idx, t in enumerate(aascfg['creation options']['available times'])), root='/')
@@ -181,6 +182,7 @@ def create_aas_app(configpath: str):
             )
             assert uid not in bakasp_instances
             bakasp_instances[uid] = control
+            save_state()
             return redirect(target)
         else:
             examples = list(os.path.basename(f) for f in glob.glob('examples/*'))
@@ -237,6 +239,7 @@ def create_aas_app(configpath: str):
             **Counter('#instances deleted in '+c.period_label for c in bakasp_instances.values()),
             '#error instances': sum(1 for c in bakasp_instances.values() if c.haserror),
         }
+        save_state()
         return render_template('aas-stats.html', stats=stats, root='/')
 
     @app.route('/stats/all')
