@@ -37,6 +37,7 @@ class ParetoFront(ModelReprPlugin):
         "width": 600,
         "height": 400,
         "model optimality flag": "<u>OPTIMAL</u><br/><br/>",
+        "include_plotlyjs": True,
     }
 
     def init(self):
@@ -44,6 +45,8 @@ class ParetoFront(ModelReprPlugin):
         self.optimal_models = None
 
     def plot_scatter_html(self):
+        if not self.optimal_models:
+            return '<p>no optimal models to show </p>'
         x, y, uid = zip(*([*s, m.uid] for s, m in self.optimal_models.items()))
         p = express.scatter(
             {'x': x, 'y': y, 'uid': uid}, x='x', y='y',
@@ -55,7 +58,7 @@ class ParetoFront(ModelReprPlugin):
         )
         p.update_traces(textposition='top center')
         with io.StringIO() as out:
-            p.write_html(out, auto_open=False, include_plotlyjs='cdn', full_html=False)
+            p.write_html(out, auto_open=False, include_plotlyjs=self.options.include_plotlyjs, full_html=False)
             return out.getvalue()
 
     def get_model_score(self, model: object):
@@ -97,11 +100,12 @@ class ParetoFront3D(ParetoFront):
         "width": 600,
         "height": 400,
         "model optimality flag": "<u>OPTIMAL</u><br/><br/>",
+        "include_plotlyjs": True,
     }
 
     def plot_scatter_html(self):
         x, y, z, uid = zip(*([*s, m.uid] for s, m in self.optimal_models.items()))
-        p = express.scatter(
+        p = express.scatter_3d(
             {'x': x, 'y': y, 'z': z, 'uid': uid}, x='x', y='y', z='z',
             title=self.options.title.format(x_label=self.options.x_label, y_label=self.options.y_label, z_label=self.options.z_label, optimal_models_count=len(x)),
             labels={'x': self.options.x_label, 'y': self.options.y_label, 'z': self.options.z_label},
@@ -111,7 +115,7 @@ class ParetoFront3D(ParetoFront):
         )
         p.update_traces(textposition='top center')
         with io.StringIO() as out:
-            p.write_html(out, auto_open=False, include_plotlyjs='cdn', full_html=False)
+            p.write_html(out, auto_open=False, include_plotlyjs=self.options.include_plotlyjs, full_html=False)
             return out.getvalue()
 
     def get_model_score(self, model: object):
