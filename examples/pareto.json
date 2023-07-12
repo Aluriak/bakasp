@@ -20,7 +20,8 @@
                 "x_label": "score of a/1 atom",
                 "y_label": "score of b/1 atom",
                 "in": "header"
-            }
+            },
+            { "kind": "stats" }
         ]
     }
 }

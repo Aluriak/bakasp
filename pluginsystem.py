@@ -34,6 +34,7 @@ class Plugin:
         It should be called at the end of __init__ calls chain"""
         pass
 
+
 def with_keys_as_id(d: dict) -> dict:
     """
     >>> with_keys_as_id({'a b': 1})

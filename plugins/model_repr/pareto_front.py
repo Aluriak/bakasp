@@ -37,7 +37,7 @@ class ParetoFront(ModelReprPlugin):
         "width": 600,
         "height": 400,
         "model optimality flag": "<u>OPTIMAL</u><br/><br/>",
-        "include_plotlyjs": True,
+        "include_plotlyjs": 'cdn',
     }
 
     def init(self):
@@ -48,9 +48,10 @@ class ParetoFront(ModelReprPlugin):
         if not self.optimal_models:
             return '<p>no optimal models to show </p>'
         x, y, uid = zip(*([*s, m.uid] for s, m in self.optimal_models.items()))
+        title = self.options.title.format(x_label=self.options.x_label, y_label=self.options.y_label, optimal_models_count=len(x))
         p = express.scatter(
             {'x': x, 'y': y, 'uid': uid}, x='x', y='y',
-            title=self.options.title.format(x_label=self.options.x_label, y_label=self.options.y_label, optimal_models_count=len(x)),
+            title=title,
             labels={'x': self.options.x_label, 'y': self.options.y_label},
             text='uid',
             width=self.options.width,
@@ -59,7 +60,7 @@ class ParetoFront(ModelReprPlugin):
         p.update_traces(textposition='top center')
         with io.StringIO() as out:
             p.write_html(out, auto_open=False, include_plotlyjs=self.options.include_plotlyjs, full_html=False)
-            return out.getvalue()
+            return out.getvalue() + f'<br/><center>{title}</center><br/>'
 
     def get_model_score(self, model: object):
         return (
