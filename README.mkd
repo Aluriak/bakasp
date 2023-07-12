@@ -377,3 +377,5 @@ String going just under the title, and before all technical links.
 - [ ] examples
     - [ ] carpooling for lunch (multiple cars, multiple restaurants, each human has its preferences of restaurants, not all have a car, trying to minimize the number of used car -> may need an exploration of paretto front)
     - [ ] placement of peoples for dinner (needs complex forms)
+
+- [ ] roover: an high-level DSL to define ASP search space.
