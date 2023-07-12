@@ -150,7 +150,7 @@ def parse_configuration(data:dict, *, filesource: str, verify_and_normalize: boo
     if data['output options']['header repr'] == 'standard':
         data['output options']['header repr'] = [{"kind": "text", "text": "{nb_models} models found in {compilation_runtime_repr}."}]
     if data['output options']['footer repr'] == 'standard':
-        data['output options']['footer repr'] = [{"kind": "text", "text": "{('All solutions share '+str(len(common_atoms.atoms))+'atoms.') if common_atoms.atoms else 'There is no common atoms across solutions.'}"}]
+        data['output options']['footer repr'] = []
 
     # fix types
     def str_to_list(key, subkey, splitter=' '):

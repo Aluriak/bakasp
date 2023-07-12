@@ -163,7 +163,6 @@ class Backend:
         stats = {}
         stats['models'] = list(self.models)
         stats['nb_models'] = len(self.models)
-        stats['common_atoms'] = ShowableModel.intersection(self.models)
         stats['compilation_runtime'] = time.time() - starttime
         stats['compilation_runtime_repr'] = utils.human_repr_of_runtime(stats['compilation_runtime'])
         self.result_header = Markup(''.join(p.repr_header(**stats) for p in self.header_repr_plugins))
