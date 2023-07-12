@@ -138,7 +138,9 @@ if __name__ == '__main__':
         elif added:
             print(f"{len(added)} words were added to {target}.")
         else:
-            print(f"No word added ().")
+            print(f"No word added.")
+
+        print(f"Totalizing {len(new_list)} {target}s.")
 
     elif args.operation == 'show':
         for idx, obj in enumerate(args.objects, start=1):
