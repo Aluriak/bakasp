@@ -27,8 +27,12 @@ AVAILABLE_CHOICE_TYPES = {  # choice uids
 
 
 def parse_config_file(json_file:str):
-    with open(json_file) as fd:
-        data = json.load(fd)
+    try:
+        with open(json_file) as fd:
+            data = json.load(fd)
+    except FileNotFoundError as err:
+        print(err)
+        data = {}
     return parse_configuration(data, filesource=json_file)
 
 def parse_configuration(data:dict, *, filesource: str, verify: bool = True):
